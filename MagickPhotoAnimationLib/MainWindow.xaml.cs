@@ -51,17 +51,37 @@ namespace MagickPhotoAnimationLib
             var endCropX = (startCropWidth - endCropWidth) / 2;
             var endCropY = (startCropHeight - endCropHeight) / 2;
 
-            img.Write(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\sequence\start.jpg");
+            img.Write(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\start_end\start.jpg");
             
             var img2 = img.Clone();
-            img.Dispose();
             
             img2.Crop(new MagickGeometry(endCropX, endCropY, endCropWidth, endCropHeight));
-            img2.Write(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\sequence\end.jpg");
-            
-            
+            img2.Write(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\start_end\end.jpg");
 
+            var animFrameCount = Math.Ceiling(animTimeInSec * OutputFrameRate);
 
+            IMagickImage currentImg;
+
+            for (int i = 0; i < animFrameCount; i ++)
+            {
+                currentImg = img.Clone();
+
+                const float OutputFrameTimeInSec = 1 / OutputFrameRate;
+                var animTimePositionInSec = (i + 0.5) * OutputFrameTimeInSec;
+                var animTimePositionRatio = animTimePositionInSec / animTimeInSec;
+
+                var currentCropX = startCropX + (int)((endCropX - startCropX) * animTimePositionRatio);
+                var currentCropY = startCropY + (int)((endCropY - startCropY) * animTimePositionRatio);
+                var currentCropWidth = startCropWidth + (int)((endCropWidth - startCropWidth) * animTimePositionRatio);
+                var currentCropHeight = startCropHeight + (int)((endCropHeight - startCropHeight) * animTimePositionRatio);
+
+                currentImg.Crop(new MagickGeometry(currentCropX, currentCropY, currentCropWidth, currentCropHeight));
+               
+                currentImg.Write($@"C:\Users\ondrej\MagickPhotoAnimationLib\out\sequence\{i.ToString("00")}.jpg");
+                currentImg.Dispose();
+            }
+
+            img.Dispose();
 
             //img.Crop(new MagickGeometry(2000, 1000, croppedWidth, (int)(croppedWidth / OutputScreenRatio)));
             //img.Crop(croppedWidth, (int)(croppedWidth / OutputScreenRatio));
