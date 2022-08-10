@@ -21,9 +21,10 @@ namespace MagickPhotoAnimationLib
     /// </summary>
     public partial class MainWindow : Window
     {
-        private static float[] ObfuscationMinimizations = new float[] { 1, 0.1f };
+        private static float[] ObfuscationMinimizations = new float[] { 1, 0.03f };
         private static float ObfuscationMinimization = ObfuscationMinimizations[1];
 
+        private int OutputScreenWidth = 3000;
         private const float OutputScreenRatio = 1.5f;
         private const int OutputFrameRate = 1;
 
@@ -73,10 +74,12 @@ namespace MagickPhotoAnimationLib
             }
 
             startImg.Dispose();
+            Application.Current.Shutdown();
         }
 
         private void WriteAndDispose(IMagickImage img)
         {
+            img.Resize(OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
             img.Resize(new Percentage(ObfuscationMinimization * 100));
             img.Write($@"C:\Users\ondrej\MagickPhotoAnimationLib\out\sequence\{_outputIndex.ToString("00")}.jpg");
             img.Dispose();
