@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -16,15 +18,12 @@ using ImageMagick;
 
 namespace MagickPhotoAnimationLib
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
-        private static float[] ObfuscationMinimizations = new float[] { 1, 0.03f };
+        private static float[] ObfuscationMinimizations = new float[] { 1, 0.2f };
         private static float ObfuscationMinimization = ObfuscationMinimizations[1];
 
-        private int OutputScreenWidth = 3000;
+        private const int OutputScreenWidth = 1000;
         private const float OutputScreenRatio = 1.5f;
         private const int OutputFrameRate = 1;
 
@@ -33,8 +32,6 @@ namespace MagickPhotoAnimationLib
         public MainWindow()
         {
             InitializeComponent();
-
-            Top = SystemParameters.PrimaryScreenHeight - Image1.Height - 85;
 
             var startImg = new MagickImage(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
 
@@ -73,8 +70,10 @@ namespace MagickPhotoAnimationLib
                 WriteAndDispose(currentImg);
             }
 
+            PreviewImgInWpf(startImg);
+
             startImg.Dispose();
-            Application.Current.Shutdown();
+            //Application.Current.Shutdown();
         }
 
         private void WriteAndDispose(IMagickImage img)
@@ -84,6 +83,19 @@ namespace MagickPhotoAnimationLib
             img.Write($@"C:\Users\ondrej\MagickPhotoAnimationLib\out\sequence\{_outputIndex.ToString("00")}.jpg");
             img.Dispose();
             _outputIndex++;
+        }
+
+        private void PreviewImgInWpf(MagickImage img)
+        {
+            var previewImage = img.Clone();
+            previewImage.Resize(OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
+            previewImage.Resize(new Percentage(ObfuscationMinimization * 100));
+            Width = previewImage.Width;
+            Height = previewImage.Height;
+            Top = SystemParameters.PrimaryScreenHeight - previewImage.Height - 45;
+            previewImage.Write($@"C:\Users\ondrej\MagickPhotoAnimationLib\out\preview_image.jpg");
+            previewImage.Dispose();
+            Image1.Source = new BitmapImage(new Uri(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\preview_image.jpg"));
         }
     }
 }

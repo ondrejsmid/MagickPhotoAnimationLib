@@ -5,8 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MagickPhotoAnimationLib"
         mc:Ignorable="d"
-        SizeToContent="WidthAndHeight"
         Left="0"
         Top="900">
-    <Image Name="Image1" />
+    <Image Name="Image1"/>
 </Window>
