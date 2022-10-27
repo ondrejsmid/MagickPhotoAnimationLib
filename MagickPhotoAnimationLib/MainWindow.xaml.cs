@@ -18,6 +18,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ImageMagick;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace MagickPhotoAnimationLib
 {
@@ -43,6 +44,15 @@ namespace MagickPhotoAnimationLib
 
             var startImg = new MagickImage(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
 
+            var image1 = new MagickImage(MagickColor.FromRgb(200, 255, 255), OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
+            var image2 = startImg.Clone();
+            const int image2Width = 300;
+            image2.Resize(image2Width, (int)(image2Width / OutputScreenRatio));
+            image1.Composite(image2, 100, 100);
+            PreviewImgInWpf(image1);
+            WriteAndDispose(image1);
+
+#if false
             var startCropWidth = startImg.Width;
             var startCropHeight = startImg.Height;
 
@@ -50,7 +60,7 @@ namespace MagickPhotoAnimationLib
             var endCropHeight = (int)(endCropWidth / OutputScreenRatio);
 
             IMagickImage currentImg = null;
-
+            
             var animStartTime = 10.3;
             var animEndTime = 10.6;
 
@@ -84,10 +94,9 @@ namespace MagickPhotoAnimationLib
             allImagesStopwatch.Stop();
             Debug.WriteLine($"Elapsed Time of all images: {(float)allImagesStopwatch.ElapsedMilliseconds / 1000} s");
             File.WriteAllText(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\log.txt", ((float)allImagesStopwatch.ElapsedMilliseconds / 1000).ToString());
-            //PreviewImgInWpf(startImg);
-
+#endif
             startImg.Dispose();
-            Application.Current.Shutdown();
+            //Application.Current.Shutdown();
         }
 
         private static void MeasureTime(Action action, string nameOfMeasurement)
