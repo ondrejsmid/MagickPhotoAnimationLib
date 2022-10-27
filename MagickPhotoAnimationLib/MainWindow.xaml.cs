@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,8 +23,8 @@ namespace MagickPhotoAnimationLib
 {
     public partial class MainWindow : Window
     {
-        private static float[] ObfuscationMinimizations = { 1, 0.2f };
-        private static float ObfuscationMinimization = ObfuscationMinimizations[0];
+        private static readonly float[] ObfuscationMinimizations = { 1, 0.2f };
+        private static readonly float ObfuscationMinimization = ObfuscationMinimizations[0];
 
         private const int OutputScreenWidth = 1000;
         private const float OutputScreenRatio = 1.5f;
@@ -47,46 +49,70 @@ namespace MagickPhotoAnimationLib
             var endCropWidth = 3000;
             var endCropHeight = (int)(endCropWidth / OutputScreenRatio);
 
-            startImg.Write(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\start_end\1_start.jpg");
-
-            var endImg = startImg.Clone();
-
-            endImg.Crop(endCropWidth, endCropHeight, Gravity.Center);
-            endImg.Write(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\start_end\2_end.jpg");
-
-            IMagickImage currentImg;
+            IMagickImage currentImg = null;
 
             var animStartTime = 10.3;
-            //var animEndTime = 13.4;
-            var animEndTime = 13.4;
+            var animEndTime = 10.6;
 
             var animFrameCount = Math.Ceiling((animEndTime - animStartTime) * OutputFrameRate);
 
+            var allImagesStopwatch = new Stopwatch();
+            allImagesStopwatch.Start();
+
             for (int i = 0; i < animFrameCount; i++)
             {
-                currentImg = startImg.Clone();
+                MeasureTime(() =>
+                {
+                    currentImg = startImg.Clone();
+
+                }, nameof(startImg.Clone));
 
                 var relativePositionWithinAnimation = i / animFrameCount;
 
                 var currentCropWidth = startCropWidth + (int)((endCropWidth - startCropWidth) * relativePositionWithinAnimation);
                 var currentCropHeight = startCropHeight + (int)((endCropHeight - startCropHeight) * relativePositionWithinAnimation);
 
-                currentImg.Crop(currentCropWidth, currentCropHeight, Gravity.Center);
+                MeasureTime(() =>
+                {
+                    currentImg.Crop(currentCropWidth, currentCropHeight, Gravity.Center);
+
+                }, nameof(startImg.Clone));
 
                 WriteAndDispose(currentImg);
             }
 
+            allImagesStopwatch.Stop();
+            Debug.WriteLine($"Elapsed Time of all images: {(float)allImagesStopwatch.ElapsedMilliseconds / 1000} s");
+            File.WriteAllText(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\log.txt", ((float)allImagesStopwatch.ElapsedMilliseconds / 1000).ToString());
             //PreviewImgInWpf(startImg);
 
             startImg.Dispose();
             Application.Current.Shutdown();
         }
 
+        private static void MeasureTime(Action action, string nameOfMeasurement)
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            action();
+            stopwatch.Stop();
+            Debug.WriteLine($"Elapsed Time of {nameOfMeasurement}: {(float)stopwatch.ElapsedMilliseconds / 1000} s");
+        }
+
         private void WriteAndDispose(IMagickImage img)
         {
-            img.Resize(OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
-            img.Resize(new Percentage(ObfuscationMinimization * 100));
-            img.Write($@"C:\Users\ondrej\MagickPhotoAnimationLib\out\sequence\{_outputIndex.ToString("00")}.jpg");
+            MeasureTime(() =>
+            {
+                img.Resize(OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
+
+            }, nameof(img.Resize));
+
+            MeasureTime(() =>
+            {
+                img.Write($@"C:\Users\ondrej\MagickPhotoAnimationLib\out\sequence\{_outputIndex.ToString("00")}.jpg");
+
+            }, nameof(img.Write));
+
             img.Dispose();
             _outputIndex++;
         }
