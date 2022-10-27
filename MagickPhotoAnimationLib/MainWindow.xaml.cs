@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -20,22 +21,25 @@ namespace MagickPhotoAnimationLib
 {
     public partial class MainWindow : Window
     {
-        private static float[] ObfuscationMinimizations = new float[] { 1, 0.2f };
-        private static float ObfuscationMinimization = ObfuscationMinimizations[1];
+        private static float[] ObfuscationMinimizations = { 1, 0.2f };
+        private static float ObfuscationMinimization = ObfuscationMinimizations[0];
 
         private const int OutputScreenWidth = 1000;
         private const float OutputScreenRatio = 1.5f;
-        private const int OutputFrameRate = 1;
+        private const int OutputFrameRate = 24;
 
-        private int _outputIndex = 0;
+        private int _outputIndex;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            var startImg = new MagickImage(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
+            foreach (var outFile in new DirectoryInfo(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\sequence").EnumerateFiles())
+            {
+                outFile.Delete();
+            }
 
-            const float animTimeInSec = 3.572f;
+            var startImg = new MagickImage(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
 
             var startCropWidth = startImg.Width;
             var startCropHeight = startImg.Height;
@@ -50,30 +54,32 @@ namespace MagickPhotoAnimationLib
             endImg.Crop(endCropWidth, endCropHeight, Gravity.Center);
             endImg.Write(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\start_end\2_end.jpg");
 
-            var animFrameCount = Math.Ceiling(animTimeInSec * OutputFrameRate);
-
             IMagickImage currentImg;
+
+            var animStartTime = 10.3;
+            //var animEndTime = 13.4;
+            var animEndTime = 13.4;
+
+            var animFrameCount = Math.Ceiling((animEndTime - animStartTime) * OutputFrameRate);
 
             for (int i = 0; i < animFrameCount; i++)
             {
                 currentImg = startImg.Clone();
 
-                const float OutputFrameTimeInSec = 1 / OutputFrameRate;
-                var animTimePositionInSec = (i + 0.5) * OutputFrameTimeInSec;
-                var animTimePositionRatio = animTimePositionInSec / animTimeInSec;
+                var relativePositionWithinAnimation = i / animFrameCount;
 
-                var currentCropWidth = startCropWidth + (int)((endCropWidth - startCropWidth) * animTimePositionRatio);
-                var currentCropHeight = startCropHeight + (int)((endCropHeight - startCropHeight) * animTimePositionRatio);
+                var currentCropWidth = startCropWidth + (int)((endCropWidth - startCropWidth) * relativePositionWithinAnimation);
+                var currentCropHeight = startCropHeight + (int)((endCropHeight - startCropHeight) * relativePositionWithinAnimation);
 
                 currentImg.Crop(currentCropWidth, currentCropHeight, Gravity.Center);
 
                 WriteAndDispose(currentImg);
             }
 
-            PreviewImgInWpf(startImg);
+            //PreviewImgInWpf(startImg);
 
             startImg.Dispose();
-            //Application.Current.Shutdown();
+            Application.Current.Shutdown();
         }
 
         private void WriteAndDispose(IMagickImage img)
