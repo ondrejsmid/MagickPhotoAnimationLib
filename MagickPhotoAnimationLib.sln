@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31005.135
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32901.215
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MagickPhotoAnimationLib", "MagickPhotoAnimationLib\MagickPhotoAnimationLib.csproj", "{C908D443-5AA3-42DF-B7B7-387B17C97B9D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MagickPhotoAnimationLib", "MagickPhotoAnimationLib\MagickPhotoAnimationLib.csproj", "{C908D443-5AA3-42DF-B7B7-387B17C97B9D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorDesigner", "VectorDesigner\VectorDesigner.csproj", "{E193121C-9192-40DB-8137-EE22983073DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{C908D443-5AA3-42DF-B7B7-387B17C97B9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C908D443-5AA3-42DF-B7B7-387B17C97B9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C908D443-5AA3-42DF-B7B7-387B17C97B9D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E193121C-9192-40DB-8137-EE22983073DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E193121C-9192-40DB-8137-EE22983073DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E193121C-9192-40DB-8137-EE22983073DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E193121C-9192-40DB-8137-EE22983073DD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

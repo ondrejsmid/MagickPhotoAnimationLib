@@ -24,8 +24,8 @@ namespace MagickPhotoAnimationLib
 {
     public partial class MainWindow : Window
     {
-        private static readonly float[] ObfuscationMinimizations = { 1, 0.2f };
-        private static readonly float ObfuscationMinimization = ObfuscationMinimizations[0];
+        private static readonly float[] ObfuscationMinimizations = { 1, 0.3f };
+        private static readonly float ObfuscationMinimization = ObfuscationMinimizations[1];
 
         private const int OutputScreenWidth = 1000;
         private const float OutputScreenRatio = 1.5f;
@@ -44,13 +44,15 @@ namespace MagickPhotoAnimationLib
 
             var startImg = new MagickImage(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
 
-            var image1 = new MagickImage(MagickColor.FromRgb(200, 255, 255), OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
+            var compositeImage = new MagickImage(MagickColor.FromRgb(200, 255, 255), OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
+            var image1 = startImg.Clone();
             var image2 = startImg.Clone();
             const int image2Width = 300;
+            image1.Resize(image2Width, (int)(image2Width / OutputScreenRatio));
             image2.Resize(image2Width, (int)(image2Width / OutputScreenRatio));
-            image1.Composite(image2, 100, 100);
-            PreviewImgInWpf(image1);
-            WriteAndDispose(image1);
+            compositeImage.Composite(image1, -150, -50);
+            compositeImage.Composite(image2, 100, 100);
+            PreviewImgInWpf(compositeImage);
 
 #if false
             var startCropWidth = startImg.Width;
