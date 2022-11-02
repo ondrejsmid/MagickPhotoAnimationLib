@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace VectorDesigner
 {
@@ -32,14 +33,42 @@ namespace VectorDesigner
             Width = WindowSize * ObfuscationMinimization;
             Height = WindowSize * ObfuscationMinimization;
             Top = SystemParameters.PrimaryScreenHeight - Height - 45;
-
-            PreviewImgInWpf(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
+            const int circleSize = 40;
+            var elipse = new Ellipse() { Height = circleSize, Width = circleSize, Fill = new SolidColorBrush(Colors.Red) };
+            var canvas1 = new Canvas();
+            Content = canvas1;
+#if true
+            PreviewImgInWpf(canvas1, @"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
+#else
+            PreviewImgInWpf(canvas1, @"C:\Users\ondrej\MagickPhotoAnimationLib\images\2.jpg");
+#endif
+            canvas1.Children.Add(elipse);
+            Canvas.SetTop(elipse, 100);
+            Canvas.SetLeft(elipse, 100);
         }
 
-        private void PreviewImgInWpf(string imgFilePath)
+        private void PreviewImgInWpf(Canvas canvas, string imgFilePath)
         {
             var bitmapImg = new BitmapImage(new Uri(imgFilePath));
-            Image1.Source = bitmapImg;
+            var image = new System.Windows.Controls.Image();
+            image.Source = bitmapImg;
+            var imageRatio = bitmapImg.Width / bitmapImg.Height;
+            if (bitmapImg.Width > bitmapImg.Height)
+            {
+                image.Width = WindowSize;
+                Canvas.SetTop(image, (WindowSize - WindowSize * 1 / imageRatio) / 2);
+            }
+            else
+            {
+                image.Height = WindowSize;
+                Canvas.SetLeft(image, (WindowSize - WindowSize * imageRatio) / 2);
+            }
+            canvas.Children.Add(image);
+        }
+
+        private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var mousePos = PointToScreen(Mouse.GetPosition(this));
         }
     }
 }
