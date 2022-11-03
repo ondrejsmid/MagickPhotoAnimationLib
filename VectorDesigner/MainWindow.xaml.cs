@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using static System.Net.Mime.MediaTypeNames;
+using Image = System.Windows.Controls.Image;
+using Point = System.Windows.Point;
+
 namespace VectorDesigner
 {
     /// <summary>
@@ -27,7 +32,9 @@ namespace VectorDesigner
         const int CircleSize = 20;
 
         private Ellipse _selectedCircle;
-        private Point _selectedPercentagePositionWithinImage;
+        private TextBlock _selectedCircleText;
+
+        private System.Windows.Point _selectedPercentagePositionWithinImage;
         Image _wpfImage;
         int _wpfImageWidth;
         int _wpfImageHeight;
@@ -54,6 +61,11 @@ namespace VectorDesigner
             PreviewImgInWpf(canvas1, bitmapImg);
 
             canvas1.Children.Add(circle);
+
+            var circleText = new TextBlock { Text = "abcgggg", FontSize = 20 };
+            circleText.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0));
+            canvas1.Children.Add(circleText);
+            _selectedCircleText = circleText;
         }
 
         private void PreviewImgInWpf(Canvas canvas, BitmapImage bitmapImg)
@@ -97,6 +109,8 @@ namespace VectorDesigner
                     selectedPointWithinWpfImage.Y / _wpfImageHeight);
                 Canvas.SetLeft(_selectedCircle, circleCanvasLeft);
                 Canvas.SetTop(_selectedCircle, circleCanvasTop);
+                Canvas.SetLeft(_selectedCircleText, circleCanvasLeft + 20);
+                Canvas.SetTop(_selectedCircleText, circleCanvasTop);
             }
         }
     }
