@@ -12,8 +12,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using static System.Net.Mime.MediaTypeNames;
-
 namespace VectorDesigner
 {
     /// <summary>
@@ -24,51 +22,82 @@ namespace VectorDesigner
         private static readonly float[] ObfuscationMinimizations = { 1, 0.3f };
         private static readonly float ObfuscationMinimization = ObfuscationMinimizations[0];
 
-        private const int WindowSize = 800;
+        private static readonly int WindowSize = (int)(800 * ObfuscationMinimization);
+        private static readonly int WindowClientSize = WindowSize - 140;
+        const int CircleSize = 20;
 
+        private Ellipse _selectedCircle;
+        private Point _selectedPercentagePositionWithinImage;
+        Image _wpfImage;
+        int _wpfImageWidth;
+        int _wpfImageHeight;
         public MainWindow()
         {
             InitializeComponent();
 
-            Width = WindowSize * ObfuscationMinimization;
-            Height = WindowSize * ObfuscationMinimization;
+            Width = WindowSize;
+            Height = WindowSize;
             Top = SystemParameters.PrimaryScreenHeight - Height - 45;
-            const int circleSize = 40;
-            var elipse = new Ellipse() { Height = circleSize, Width = circleSize, Fill = new SolidColorBrush(Colors.Red) };
+
             var canvas1 = new Canvas();
             Content = canvas1;
+
+            var circle = new Ellipse() { Height = CircleSize, Width = CircleSize, Fill = new SolidColorBrush(Colors.Red) };
+
+            _selectedCircle = circle;
+
 #if true
-            PreviewImgInWpf(canvas1, @"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
+            var bitmapImg = new BitmapImage(new Uri(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg"));
 #else
-            PreviewImgInWpf(canvas1, @"C:\Users\ondrej\MagickPhotoAnimationLib\images\2.jpg");
+            var bitmapImg = new BitmapImage(new Uri(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\2.jpg"));
 #endif
-            canvas1.Children.Add(elipse);
-            Canvas.SetTop(elipse, 100);
-            Canvas.SetLeft(elipse, 100);
+            PreviewImgInWpf(canvas1, bitmapImg);
+
+            canvas1.Children.Add(circle);
         }
 
-        private void PreviewImgInWpf(Canvas canvas, string imgFilePath)
+        private void PreviewImgInWpf(Canvas canvas, BitmapImage bitmapImg)
         {
-            var bitmapImg = new BitmapImage(new Uri(imgFilePath));
-            var image = new System.Windows.Controls.Image();
-            image.Source = bitmapImg;
-            var imageRatio = bitmapImg.Width / bitmapImg.Height;
+            _wpfImage = new Image();
+            _wpfImage.Source = bitmapImg;
+            
+            var imageRatio = _wpfImage.Source.Width / _wpfImage.Source.Height;
+            
             if (bitmapImg.Width > bitmapImg.Height)
             {
-                image.Width = WindowSize;
-                Canvas.SetTop(image, (WindowSize - WindowSize * 1 / imageRatio) / 2);
+                _wpfImage.Width = WindowClientSize;
+                _wpfImageWidth = (int)_wpfImage.Width;
+                _wpfImageHeight = (int)(_wpfImageWidth / imageRatio);
             }
             else
             {
-                image.Height = WindowSize;
-                Canvas.SetLeft(image, (WindowSize - WindowSize * imageRatio) / 2);
+                _wpfImage.Height = WindowClientSize;
+                _wpfImageHeight = (int)_wpfImage.Height;
+                _wpfImageWidth = (int)(_wpfImageHeight / imageRatio);
             }
-            canvas.Children.Add(image);
+            Canvas.SetTop(_wpfImage, 60);
+            Canvas.SetLeft(_wpfImage, 60);
+            canvas.Children.Add(_wpfImage);
         }
 
         private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             var mousePos = PointToScreen(Mouse.GetPosition(this));
+            
+            var circleCanvasLeft = mousePos.X - Left - CircleSize / 2 - 8;
+            var circleCanvasTop = mousePos.Y - Top - CircleSize / 2 - 31;
+
+            var selectedPointWithinWpfImage = new Point(circleCanvasLeft - 50, circleCanvasTop - 50);
+          
+            if (selectedPointWithinWpfImage.X > 0 && selectedPointWithinWpfImage.X < _wpfImageWidth &&
+                selectedPointWithinWpfImage.Y > 0 && selectedPointWithinWpfImage.Y < _wpfImageHeight)
+            {
+                _selectedPercentagePositionWithinImage = new Point(
+                    selectedPointWithinWpfImage.X / _wpfImageWidth,
+                    selectedPointWithinWpfImage.Y / _wpfImageHeight);
+                Canvas.SetLeft(_selectedCircle, circleCanvasLeft);
+                Canvas.SetTop(_selectedCircle, circleCanvasTop);
+            }
         }
     }
 }
