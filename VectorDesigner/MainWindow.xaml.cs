@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,6 +27,7 @@ namespace VectorDesigner
     public partial class MainWindow : Window
     {
         const int CircleSize = 20;
+        const string VectorFileExtension = ".vector";
 
         private static readonly float[] ObfuscationMinimizations = { 1, 0.3f };
         private static readonly float ObfuscationMinimization = ObfuscationMinimizations[0];
@@ -38,7 +40,7 @@ namespace VectorDesigner
             { "Limb", new string[] { "Top", "Bottom" } }
         };
 
-
+        private string _imagePath;
         private int _wpfImageWidth;
         private int _wpfImageHeight;
         private string _vectorTypeKey;
@@ -64,11 +66,9 @@ namespace VectorDesigner
             var canvas1 = new Canvas();
             Content = canvas1;
             _canvas = canvas1;
-#if true
-            var bitmapImg = new BitmapImage(new Uri(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg"));
-#else
-            var bitmapImg = new BitmapImage(new Uri(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\2.jpg"));
-#endif
+            
+            _imagePath = @"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg";
+            var bitmapImg = new BitmapImage(new Uri(_imagePath));
             _vectorTypeKey = "Limb";
             _vectorPoints = new Point?[VectorTypes[_vectorTypeKey].Count()];
             _vectorPointIndex = 0;
@@ -191,10 +191,10 @@ namespace VectorDesigner
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            this.KeyDown += new KeyEventHandler(MainWindow_KeyDown);
+            KeyDown += new KeyEventHandler(MainWindow_KeyDown);
         }
 
-        void MainWindow_KeyDown(object sender, KeyEventArgs e)
+        private void MainWindow_KeyDown(object sender, KeyEventArgs e)
         {
             switch (e.Key)
             {
@@ -206,7 +206,23 @@ namespace VectorDesigner
                     _vectorPointIndex = _vectorPointIndex == 0 ? VectorTypes[_vectorTypeKey].Count() - 1 : _vectorPointIndex - 1;
                     RedrawHighlightingOfNavigationSelection();
                     break;
+                case Key.S:
+                    if (_vectorPoints.All(x => x != null))
+                    {
+                        Save();
+                    }
+                    break;
             }
+        }
+
+        private void Save()
+        {
+            var dirPath = System.IO.Path.GetDirectoryName(_imagePath);
+            var imageFileName = System.IO.Path.GetFileNameWithoutExtension(_imagePath);
+            var content = new StringBuilder();
+            content.AppendLine(_vectorTypeKey);
+            content.Append(string.Join(Environment.NewLine, _vectorPoints));
+            File.WriteAllText(System.IO.Path.Combine(dirPath, $"{imageFileName}{VectorFileExtension}"), content.ToString());
         }
     }
 }
