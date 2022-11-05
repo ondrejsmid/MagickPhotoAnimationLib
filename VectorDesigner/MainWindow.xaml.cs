@@ -47,9 +47,10 @@ namespace VectorDesigner
 
         private Canvas _canvas;
         private Image _wpfImage;
-        private CircleWithTextBlock[] _vectorStructureNavigation;
+        private CircleWithTextBlock[] _insideNavigation;
+        private TextBlock[] _bottomNavigation;
 
-        private readonly CanvasPositionToImagePercentagePositionConvertor _canvasPositionToImagePercentageConvertor;
+        private CanvasPositionToImagePercentagePositionConvertor _canvasPositionToImagePercentageConvertor;
 
         public MainWindow()
         {
@@ -71,20 +72,21 @@ namespace VectorDesigner
             _vectorTypeKey = "Limb";
             _vectorPoints = new Point?[VectorTypes[_vectorTypeKey].Count()];
             _vectorPointIndex = 0;
+            _vectorPoints[0] = new Point(0.9, 0.1);
+            _vectorPoints[1] = new Point(0.2478, 0.824);
 
-            _vectorStructureNavigation = VectorTypes[_vectorTypeKey]
+            _insideNavigation = VectorTypes[_vectorTypeKey]
                 .Select(x => new CircleWithTextBlock
                 {
                     Circle = new Ellipse() { Height = CircleSize, Width = CircleSize, Fill = new SolidColorBrush(Colors.Red) },
                     TextBlock = new TextBlock { Text = x, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) }
                 })
                 .ToArray();
-
+            
+            DrawBottomNavigation();
             PreviewImgInWpf(canvas1, bitmapImg);
-
-            _canvasPositionToImagePercentageConvertor = new CanvasPositionToImagePercentagePositionConvertor(_wpfImageWidth, _wpfImageHeight);
-
-            ShowVectorStructureNavigation();
+            RedrawInsideNavigation();
+            RedrawHighlightingOfNavigationSelection();
         }
 
         private void PreviewImgInWpf(Canvas canvas, BitmapImage bitmapImg)
@@ -109,6 +111,7 @@ namespace VectorDesigner
             Canvas.SetTop(_wpfImage, 60);
             Canvas.SetLeft(_wpfImage, 60);
             canvas.Children.Add(_wpfImage);
+            _canvasPositionToImagePercentageConvertor = new CanvasPositionToImagePercentagePositionConvertor(_wpfImageWidth, _wpfImageHeight);
         }
 
         private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -124,28 +127,59 @@ namespace VectorDesigner
             if (imagePercentagePosition != null)
             {
                 _vectorPoints[_vectorPointIndex] = imagePercentagePosition;
-                ShowVectorStructureNavigation();
+                RedrawInsideNavigation();
             }
         }
 
-        private void ShowVectorStructureNavigation()
+        private void RedrawInsideNavigation()
         {
-            for (int i = 0; i < _vectorPoints.Count(); i++)
+            for (int i = 0; i < VectorTypes[_vectorTypeKey].Count(); i++)
             {
-                _canvas.Children.Remove(_vectorStructureNavigation[i].Circle);
-                _canvas.Children.Remove(_vectorStructureNavigation[i].TextBlock);
+                _canvas.Children.Remove(_insideNavigation[i].Circle);
+                _canvas.Children.Remove(_insideNavigation[i].TextBlock);
             }
-            for (int i = 0; i < _vectorPoints.Count(); i++)
+            for (int i = 0; i < VectorTypes[_vectorTypeKey].Count(); i++)
             {
                 if (_vectorPoints[i] != null)
                 {
-                    _canvas.Children.Add(_vectorStructureNavigation[i].Circle);
-                    _canvas.Children.Add(_vectorStructureNavigation[i].TextBlock);
-                    var vectorPointCanvasPosition = _canvasPositionToImagePercentageConvertor.ToCanvasPosition(_vectorPoints[_vectorPointIndex].Value);
-                    Canvas.SetLeft(_vectorStructureNavigation[i].Circle, vectorPointCanvasPosition.X);
-                    Canvas.SetTop(_vectorStructureNavigation[i].Circle, vectorPointCanvasPosition.Y);
-                    Canvas.SetLeft(_vectorStructureNavigation[i].TextBlock, vectorPointCanvasPosition.X + 20);
-                    Canvas.SetTop(_vectorStructureNavigation[i].TextBlock, vectorPointCanvasPosition.Y - 5);
+                    _canvas.Children.Add(_insideNavigation[i].Circle);
+                    _canvas.Children.Add(_insideNavigation[i].TextBlock);
+                    var vectorPointCanvasPosition = _canvasPositionToImagePercentageConvertor.ToCanvasPosition(_vectorPoints[i].Value);
+                    Canvas.SetLeft(_insideNavigation[i].Circle, vectorPointCanvasPosition.X);
+                    Canvas.SetTop(_insideNavigation[i].Circle, vectorPointCanvasPosition.Y);
+                    Canvas.SetLeft(_insideNavigation[i].TextBlock, vectorPointCanvasPosition.X + 20);
+                    Canvas.SetTop(_insideNavigation[i].TextBlock, vectorPointCanvasPosition.Y - 5);
+                }
+            }
+        }
+
+        private void DrawBottomNavigation()
+        {
+            _bottomNavigation = VectorTypes[_vectorTypeKey]
+                .Select(x => new TextBlock { Text = x, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) })
+                .ToArray();
+
+            for (int i = 0; i < VectorTypes[_vectorTypeKey].Count(); i++)
+            {
+                _canvas.Children.Add(_bottomNavigation[i]);
+                Canvas.SetLeft(_bottomNavigation[i], i * 80 + 5);
+                Canvas.SetTop(_bottomNavigation[i], WindowClientSize + 70);
+            }
+        }
+
+        private void RedrawHighlightingOfNavigationSelection()
+        {
+            for (int i = 0; i < VectorTypes[_vectorTypeKey].Count(); i++)
+            {
+                if (i == _vectorPointIndex)
+                {
+                    _insideNavigation[i].TextBlock.FontWeight = FontWeights.Bold;
+                    _bottomNavigation[i].FontWeight = FontWeights.Bold;
+                }
+                else
+                {
+                    _insideNavigation[i].TextBlock.FontWeight = FontWeights.Normal;
+                    _bottomNavigation[i].FontWeight = FontWeights.Normal;
                 }
             }
         }
