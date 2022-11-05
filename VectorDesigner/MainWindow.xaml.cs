@@ -69,26 +69,7 @@ namespace VectorDesigner
             Content = canvas1;
             _canvas = canvas1;
             
-            _imagePath = @"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg";
-            var bitmapImg = new BitmapImage(new Uri(_imagePath));
-            _vectorTypeKey = "Limb";
-            _vectorPoints = new Point?[VectorTypes[_vectorTypeKey].Count()];
-            _vectorPointIndex = 0;
-            _vectorPoints[0] = new Point(0, 0);
-            _vectorPoints[1] = new Point(0.5, 0.5);
-
-            _insideNavigation = VectorTypes[_vectorTypeKey]
-                .Select(x => new CircleWithTextBlock
-                {
-                    Circle = new Ellipse() { Height = CircleSize, Width = CircleSize, Fill = new SolidColorBrush(Colors.Blue) },
-                    TextBlock = new TextBlock { Text = x, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) }
-                })
-                .ToArray();
-            
-            DrawBottomNavigation();
-            PreviewImgInWpf(canvas1, bitmapImg);
-            RedrawInsideNavigation();
-            RedrawHighlightingOfNavigationSelection();
+           
 
             var testCircle = new Ellipse() { Height = 5, Width = 5, Fill = new SolidColorBrush(Colors.Red) };
             _canvas.Children.Add(testCircle);
@@ -96,8 +77,12 @@ namespace VectorDesigner
             Canvas.SetTop(testCircle, 0);
         }
 
-        private void PreviewImgInWpf(Canvas canvas, BitmapImage bitmapImg)
+        private void DrawWpfImage()
         {
+            _canvas.Children.Remove(_wpfImage);
+
+            var bitmapImg = new BitmapImage(new Uri(_imagePath));
+
             _wpfImage = new Image();
             _wpfImage.Source = bitmapImg;
             
@@ -117,34 +102,27 @@ namespace VectorDesigner
             }
             Canvas.SetTop(_wpfImage, 60);
             Canvas.SetLeft(_wpfImage, 60);
-            canvas.Children.Add(_wpfImage);
+            _canvas.Children.Add(_wpfImage);
             _canvasPositionToImagePercentageConvertor = new CanvasPositionToImagePercentagePositionConvertor(_wpfImageWidth, _wpfImageHeight);
         }
 
-        private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void RedrawInsideNavigation()
         {
-            var mousePos = PointToScreen(Mouse.GetPosition(this));
-            
-            var circleCanvasLeft = mousePos.X - Left - CircleSize / 2 - 8;
-            var circleCanvasTop = mousePos.Y - Top - CircleSize / 2 - 31;
-
-            var imagePercentagePosition = _canvasPositionToImagePercentageConvertor
-                .ToImagePercentagePosition(new Point(circleCanvasLeft, circleCanvasTop));
-
-            if (imagePercentagePosition != null)
-            {
-                _vectorPoints[_vectorPointIndex] = imagePercentagePosition;
-                RedrawInsideNavigation();
-            }
+            UndrawInsideNavigation();
+            DrawInsideNavigation();
         }
 
-        private void RedrawInsideNavigation()
+        private void UndrawInsideNavigation()
         {
             for (int i = 0; i < VectorTypes[_vectorTypeKey].Count(); i++)
             {
                 _canvas.Children.Remove(_insideNavigation[i].Circle);
                 _canvas.Children.Remove(_insideNavigation[i].TextBlock);
             }
+        }
+
+        private void DrawInsideNavigation()
+        {
             for (int i = 0; i < VectorTypes[_vectorTypeKey].Count(); i++)
             {
                 if (_vectorPoints[i] != null)
@@ -160,13 +138,32 @@ namespace VectorDesigner
             }
         }
 
+        private void RedrawBottomNavigation()
+        {
+            UndrawBottomNavigation();
+            DrawBottomNavigation();
+        }
+
+        private void UndrawBottomNavigation()
+        {
+            if (_bottomNavigation == null)
+            {
+                return;
+            }
+            for (int i = 0; i < VectorTypes[_vectorTypeKey].Count(); i++)
+            {
+                _canvas.Children.Remove(_bottomNavigation[i]);
+            }
+            _canvas.Children.Remove(_vectorTypeKeyTextBlock);
+        }
+
         private void DrawBottomNavigation()
         {
             _bottomNavigation = VectorTypes[_vectorTypeKey]
                 .Select(x => new TextBlock { Text = x, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) })
                 .ToArray();
             _vectorTypeKeyTextBlock = new TextBlock { Text = _vectorTypeKey, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) };
-            
+
             for (int i = 0; i < VectorTypes[_vectorTypeKey].Count(); i++)
             {
                 _canvas.Children.Add(_bottomNavigation[i]);
@@ -195,6 +192,27 @@ namespace VectorDesigner
             }
         }
 
+        private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (_imagePath == null)
+            {
+                return;
+            }
+            var mousePos = PointToScreen(Mouse.GetPosition(this));
+
+            var circleCanvasLeft = mousePos.X - Left - CircleSize / 2 - 8;
+            var circleCanvasTop = mousePos.Y - Top - CircleSize / 2 - 31;
+
+            var imagePercentagePosition = _canvasPositionToImagePercentageConvertor
+                .ToImagePercentagePosition(new Point(circleCanvasLeft, circleCanvasTop));
+
+            if (imagePercentagePosition != null)
+            {
+                _vectorPoints[_vectorPointIndex] = imagePercentagePosition;
+                RedrawInsideNavigation();
+            }
+        }
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             KeyDown += new KeyEventHandler(MainWindow_KeyDown);
@@ -205,14 +223,26 @@ namespace VectorDesigner
             switch (e.Key)
             {
                 case Key.Right:
+                    if (_imagePath == null)
+                    {
+                        return;
+                    }
                     _vectorPointIndex = (_vectorPointIndex + 1) % VectorTypes[_vectorTypeKey].Count();
                     RedrawHighlightingOfNavigationSelection();
                     break;
                 case Key.Left:
+                    if (_imagePath == null)
+                    {
+                        return;
+                    }
                     _vectorPointIndex = _vectorPointIndex == 0 ? VectorTypes[_vectorTypeKey].Count() - 1 : _vectorPointIndex - 1;
                     RedrawHighlightingOfNavigationSelection();
                     break;
                 case Key.S:
+                    if (_imagePath == null)
+                    {
+                        return;
+                    }
                     if (_vectorPoints.All(x => x != null))
                     {
                         Save();
@@ -245,6 +275,31 @@ namespace VectorDesigner
             }
             _imagePath = openFileDialog.FileName;
             var vector = VectorLoader.Load(_imagePath);
+            if (vector == null)
+            {
+                _vectorTypeKey = VectorTypes.Keys.First();
+                _vectorPoints = new Point?[VectorTypes[_vectorTypeKey].Count()];
+            }
+            else
+            {
+                _vectorTypeKey = vector.TypeKey;
+                _vectorPoints = vector.Points.Cast<Point?>().ToArray();
+            }
+            
+            _vectorPointIndex = 0;
+
+            _insideNavigation = VectorTypes[_vectorTypeKey]
+                .Select(x => new CircleWithTextBlock
+                {
+                    Circle = new Ellipse() { Height = CircleSize, Width = CircleSize, Fill = new SolidColorBrush(Colors.Blue) },
+                    TextBlock = new TextBlock { Text = x, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) }
+                })
+                .ToArray();
+
+            RedrawBottomNavigation();
+            DrawWpfImage();
+            RedrawInsideNavigation();
+            RedrawHighlightingOfNavigationSelection();
         }
     }
 }
