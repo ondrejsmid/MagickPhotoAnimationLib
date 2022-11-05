@@ -188,5 +188,25 @@ namespace VectorDesigner
                 }
             }
         }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.KeyDown += new KeyEventHandler(MainWindow_KeyDown);
+        }
+
+        void MainWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.Key)
+            {
+                case Key.Right:
+                    _vectorPointIndex = (_vectorPointIndex + 1) % VectorTypes[_vectorTypeKey].Count();
+                    RedrawHighlightingOfNavigationSelection();
+                    break;
+                case Key.Left:
+                    _vectorPointIndex = _vectorPointIndex == 0 ? VectorTypes[_vectorTypeKey].Count() - 1 : _vectorPointIndex - 1;
+                    RedrawHighlightingOfNavigationSelection();
+                    break;
+            }
+        }
     }
 }

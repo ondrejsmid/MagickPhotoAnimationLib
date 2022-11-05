@@ -6,5 +6,6 @@
         mc:Ignorable="d"
         Left="0"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        Loaded="Window_Loaded"
         >
 </Window>
