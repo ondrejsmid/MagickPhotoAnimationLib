@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using VectorDesigner.Models;
 using static System.Net.Mime.MediaTypeNames;
 using Image = System.Windows.Controls.Image;
 using Point = System.Windows.Point;
@@ -24,22 +25,35 @@ namespace VectorDesigner
     /// </summary>
     public partial class MainWindow : Window
     {
+        const int CircleSize = 20;
+
         private static readonly float[] ObfuscationMinimizations = { 1, 0.3f };
         private static readonly float ObfuscationMinimization = ObfuscationMinimizations[0];
 
         private static readonly int WindowSize = (int)(800 * ObfuscationMinimization);
         private static readonly int WindowClientSize = WindowSize - 140;
-        const int CircleSize = 20;
 
-        private Ellipse _selectedCircle;
-        private TextBlock _selectedCircleText;
+        private static readonly Dictionary<string, string[]> VectorTypes = new Dictionary<string, string[]>
+        {
+            { "Limb", new string[] { "Top", "Bottom" } }
+        };
 
-        private System.Windows.Point _selectedPercentagePositionWithinImage;
-        Image _wpfImage;
-        int _wpfImageWidth;
-        int _wpfImageHeight;
+
+        private int _wpfImageWidth;
+        private int _wpfImageHeight;
+        private string _vectorTypeKey;
+        private Point?[] _vectorPoints;
+        private int _vectorPointIndex;
+
+        private Canvas _canvas;
+        private Image _wpfImage;
+        private CircleWithTextBlock[] _vectorStructureNavigation;
+
+        private readonly CanvasPositionToImagePercentagePositionConvertor _canvasPositionToImagePercentageConvertor;
+
         public MainWindow()
         {
+
             InitializeComponent();
 
             Width = WindowSize;
@@ -48,24 +62,29 @@ namespace VectorDesigner
 
             var canvas1 = new Canvas();
             Content = canvas1;
-
-            var circle = new Ellipse() { Height = CircleSize, Width = CircleSize, Fill = new SolidColorBrush(Colors.Red) };
-
-            _selectedCircle = circle;
-
+            _canvas = canvas1;
 #if true
             var bitmapImg = new BitmapImage(new Uri(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg"));
 #else
             var bitmapImg = new BitmapImage(new Uri(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\2.jpg"));
 #endif
+            _vectorTypeKey = "Limb";
+            _vectorPoints = new Point?[VectorTypes[_vectorTypeKey].Count()];
+            _vectorPointIndex = 0;
+
+            _vectorStructureNavigation = VectorTypes[_vectorTypeKey]
+                .Select(x => new CircleWithTextBlock
+                {
+                    Circle = new Ellipse() { Height = CircleSize, Width = CircleSize, Fill = new SolidColorBrush(Colors.Red) },
+                    TextBlock = new TextBlock { Text = x, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) }
+                })
+                .ToArray();
+
             PreviewImgInWpf(canvas1, bitmapImg);
 
-            canvas1.Children.Add(circle);
+            _canvasPositionToImagePercentageConvertor = new CanvasPositionToImagePercentagePositionConvertor(_wpfImageWidth, _wpfImageHeight);
 
-            var circleText = new TextBlock { Text = "abcgggg", FontSize = 20 };
-            circleText.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0));
-            canvas1.Children.Add(circleText);
-            _selectedCircleText = circleText;
+            ShowVectorStructureNavigation();
         }
 
         private void PreviewImgInWpf(Canvas canvas, BitmapImage bitmapImg)
@@ -99,18 +118,35 @@ namespace VectorDesigner
             var circleCanvasLeft = mousePos.X - Left - CircleSize / 2 - 8;
             var circleCanvasTop = mousePos.Y - Top - CircleSize / 2 - 31;
 
-            var selectedPointWithinWpfImage = new Point(circleCanvasLeft - 50, circleCanvasTop - 50);
-          
-            if (selectedPointWithinWpfImage.X > 0 && selectedPointWithinWpfImage.X < _wpfImageWidth &&
-                selectedPointWithinWpfImage.Y > 0 && selectedPointWithinWpfImage.Y < _wpfImageHeight)
+            var imagePercentagePosition = _canvasPositionToImagePercentageConvertor
+                .ToImagePercentagePosition(new Point(circleCanvasLeft, circleCanvasTop));
+
+            if (imagePercentagePosition != null)
             {
-                _selectedPercentagePositionWithinImage = new Point(
-                    selectedPointWithinWpfImage.X / _wpfImageWidth,
-                    selectedPointWithinWpfImage.Y / _wpfImageHeight);
-                Canvas.SetLeft(_selectedCircle, circleCanvasLeft);
-                Canvas.SetTop(_selectedCircle, circleCanvasTop);
-                Canvas.SetLeft(_selectedCircleText, circleCanvasLeft + 20);
-                Canvas.SetTop(_selectedCircleText, circleCanvasTop);
+                _vectorPoints[_vectorPointIndex] = imagePercentagePosition;
+                ShowVectorStructureNavigation();
+            }
+        }
+
+        private void ShowVectorStructureNavigation()
+        {
+            for (int i = 0; i < _vectorPoints.Count(); i++)
+            {
+                _canvas.Children.Remove(_vectorStructureNavigation[i].Circle);
+                _canvas.Children.Remove(_vectorStructureNavigation[i].TextBlock);
+            }
+            for (int i = 0; i < _vectorPoints.Count(); i++)
+            {
+                if (_vectorPoints[i] != null)
+                {
+                    _canvas.Children.Add(_vectorStructureNavigation[i].Circle);
+                    _canvas.Children.Add(_vectorStructureNavigation[i].TextBlock);
+                    var vectorPointCanvasPosition = _canvasPositionToImagePercentageConvertor.ToCanvasPosition(_vectorPoints[_vectorPointIndex].Value);
+                    Canvas.SetLeft(_vectorStructureNavigation[i].Circle, vectorPointCanvasPosition.X);
+                    Canvas.SetTop(_vectorStructureNavigation[i].Circle, vectorPointCanvasPosition.Y);
+                    Canvas.SetLeft(_vectorStructureNavigation[i].TextBlock, vectorPointCanvasPosition.X + 20);
+                    Canvas.SetTop(_vectorStructureNavigation[i].TextBlock, vectorPointCanvasPosition.Y - 5);
+                }
             }
         }
     }
