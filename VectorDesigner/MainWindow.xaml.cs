@@ -72,13 +72,13 @@ namespace VectorDesigner
             _vectorTypeKey = "Limb";
             _vectorPoints = new Point?[VectorTypes[_vectorTypeKey].Count()];
             _vectorPointIndex = 0;
-            _vectorPoints[0] = new Point(0.9, 0.1);
-            _vectorPoints[1] = new Point(0.2478, 0.824);
+            _vectorPoints[0] = new Point(0, 0);
+            _vectorPoints[1] = new Point(0.5, 0.5);
 
             _insideNavigation = VectorTypes[_vectorTypeKey]
                 .Select(x => new CircleWithTextBlock
                 {
-                    Circle = new Ellipse() { Height = CircleSize, Width = CircleSize, Fill = new SolidColorBrush(Colors.Red) },
+                    Circle = new Ellipse() { Height = CircleSize, Width = CircleSize, Fill = new SolidColorBrush(Colors.Blue) },
                     TextBlock = new TextBlock { Text = x, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) }
                 })
                 .ToArray();
@@ -87,6 +87,11 @@ namespace VectorDesigner
             PreviewImgInWpf(canvas1, bitmapImg);
             RedrawInsideNavigation();
             RedrawHighlightingOfNavigationSelection();
+
+            var testCircle = new Ellipse() { Height = 5, Width = 5, Fill = new SolidColorBrush(Colors.Red) };
+            _canvas.Children.Add(testCircle);
+            Canvas.SetLeft(testCircle, 988);
+            Canvas.SetTop(testCircle, 0);
         }
 
         private void PreviewImgInWpf(Canvas canvas, BitmapImage bitmapImg)
@@ -106,7 +111,7 @@ namespace VectorDesigner
             {
                 _wpfImage.Height = WindowClientSize;
                 _wpfImageHeight = (int)_wpfImage.Height;
-                _wpfImageWidth = (int)(_wpfImageHeight / imageRatio);
+                _wpfImageWidth = (int)(_wpfImageHeight / (1 / imageRatio));
             }
             Canvas.SetTop(_wpfImage, 60);
             Canvas.SetLeft(_wpfImage, 60);
