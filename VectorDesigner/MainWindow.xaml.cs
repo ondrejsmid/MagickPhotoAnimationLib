@@ -51,6 +51,7 @@ namespace VectorDesigner
         private Image _wpfImage;
         private CircleWithTextBlock[] _insideNavigation;
         private TextBlock[] _bottomNavigation;
+        private TextBlock _vectorTypeKeyTextBlock;
 
         private CanvasPositionToImagePercentagePositionConvertor _canvasPositionToImagePercentageConvertor;
 
@@ -163,13 +164,17 @@ namespace VectorDesigner
             _bottomNavigation = VectorTypes[_vectorTypeKey]
                 .Select(x => new TextBlock { Text = x, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) })
                 .ToArray();
-
+            _vectorTypeKeyTextBlock = new TextBlock { Text = _vectorTypeKey, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) };
+            
             for (int i = 0; i < VectorTypes[_vectorTypeKey].Count(); i++)
             {
                 _canvas.Children.Add(_bottomNavigation[i]);
                 Canvas.SetLeft(_bottomNavigation[i], i * 80 + 5);
                 Canvas.SetTop(_bottomNavigation[i], WindowClientSize + 70);
             }
+            _canvas.Children.Add(_vectorTypeKeyTextBlock);
+            Canvas.SetLeft(_vectorTypeKeyTextBlock, 5);
+            Canvas.SetTop(_vectorTypeKeyTextBlock, 0);
         }
 
         private void RedrawHighlightingOfNavigationSelection()
