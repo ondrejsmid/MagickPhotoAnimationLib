@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -27,7 +28,6 @@ namespace VectorDesigner
     public partial class MainWindow : Window
     {
         const int CircleSize = 20;
-        const string VectorFileExtension = ".vector";
 
         private static readonly float[] ObfuscationMinimizations = { 1, 0.3f };
         private static readonly float ObfuscationMinimization = ObfuscationMinimizations[0];
@@ -37,7 +37,8 @@ namespace VectorDesigner
 
         private static readonly Dictionary<string, string[]> VectorTypes = new Dictionary<string, string[]>
         {
-            { "Limb", new string[] { "Top", "Bottom" } }
+            { "Limb", new string[] { "Top", "Bottom" } },
+            { "Bbb", new string[] { "p1", "p2", "p3" } }
         };
 
         private string _imagePath;
@@ -217,6 +218,9 @@ namespace VectorDesigner
                         Save();
                     }
                     break;
+                case Key.O:
+                    Open();
+                    break;
             }
         }
 
@@ -227,7 +231,20 @@ namespace VectorDesigner
             var content = new StringBuilder();
             content.AppendLine(_vectorTypeKey);
             content.Append(string.Join(Environment.NewLine, _vectorPoints));
-            File.WriteAllText(System.IO.Path.Combine(dirPath, $"{imageFileName}{VectorFileExtension}"), content.ToString());
+            File.WriteAllText(System.IO.Path.Combine(dirPath, $"{imageFileName}{VectorLoader.VectorFileExtension}"), content.ToString());
+        }
+
+        private void Open()
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.InitialDirectory = @"C:\Users\ondrej\MagickPhotoAnimationLib\images";
+            openFileDialog.Filter = "Image Files(*.jpg;*.jpeg)|*.jpg;*.jpeg;";
+            if (openFileDialog.ShowDialog() != true)
+            {
+                return;
+            }
+            _imagePath = openFileDialog.FileName;
+            var vector = VectorLoader.Load(_imagePath);
         }
     }
 }
