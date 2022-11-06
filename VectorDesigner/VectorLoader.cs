@@ -14,6 +14,12 @@ namespace VectorDesigner
     {
         public const string VectorFileExtension = ".vector";
 
+        public static readonly Dictionary<string, string[]> VectorTypes = new Dictionary<string, string[]>
+        {
+            { "Limb", new string[] { "Top", "Bottom" } },
+            { "Bbb", new string[] { "p1", "p2", "p3" } }
+        };
+
         public class Vector
         {
             public string TypeKey;

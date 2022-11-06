@@ -35,24 +35,21 @@ namespace VectorDesigner
         private static readonly int WindowSize = (int)(800 * ObfuscationMinimization);
         private static readonly int WindowClientSize = WindowSize - 140;
 
-        private static readonly Dictionary<string, string[]> VectorTypes = new Dictionary<string, string[]>
-        {
-            { "Limb", new string[] { "Top", "Bottom" } },
-            { "Bbb", new string[] { "p1", "p2", "p3" } }
-        };
-
         private string _imagePath;
         private int _wpfImageWidth;
         private int _wpfImageHeight;
-        private string _vectorTypeKey;
         private Point?[] _vectorPoints;
+        private int _vectorTypeKeyIndex;
         private int _vectorPointIndex;
+        private bool _isInDialogForSelectingVectorType;
+        private string VectorTypeKey { get => VectorLoader.VectorTypes.Keys.ElementAt(_vectorTypeKeyIndex); }
 
         private Canvas _canvas;
         private Image _wpfImage;
         private CircleWithTextBlock[] _insideNavigation;
         private TextBlock[] _bottomNavigation;
         private TextBlock _vectorTypeKeyTextBlock;
+        private TextBlock[] _dialogForSelectingVectorType;
 
         private CanvasPositionToImagePercentagePositionConvertor _canvasPositionToImagePercentageConvertor;
 
@@ -68,19 +65,46 @@ namespace VectorDesigner
             var canvas1 = new Canvas();
             Content = canvas1;
             _canvas = canvas1;
-            
-           
 
+#if true
+            Open(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
+#endif
+#if false
             var testCircle = new Ellipse() { Height = 5, Width = 5, Fill = new SolidColorBrush(Colors.Red) };
             _canvas.Children.Add(testCircle);
             Canvas.SetLeft(testCircle, 988);
             Canvas.SetTop(testCircle, 0);
+#endif
+        }
+
+        private void Redraw()
+        {
+            RedrawBottomNavigation();
+            RedrawWpfImage();
+            RedrawInsideNavigation();
+            RedrawHighlightingOfPointSelection();
+        }
+
+        private void Undraw()
+        {
+            UndrawBottomNavigation();
+            UndrawWpfImage();
+            UndrawInsideNavigation();
+        }
+
+        private void RedrawWpfImage()
+        {
+            UndrawWpfImage();
+            DrawWpfImage();
+        }
+
+        private void UndrawWpfImage()
+        {
+            _canvas.Children.Remove(_wpfImage);
         }
 
         private void DrawWpfImage()
         {
-            _canvas.Children.Remove(_wpfImage);
-
             var bitmapImg = new BitmapImage(new Uri(_imagePath));
 
             _wpfImage = new Image();
@@ -114,16 +138,28 @@ namespace VectorDesigner
 
         private void UndrawInsideNavigation()
         {
-            for (int i = 0; i < VectorTypes[_vectorTypeKey].Count(); i++)
+            if (_insideNavigation == null)
+            {
+                return;
+            }
+            for (int i = 0; i < VectorLoader.VectorTypes[VectorTypeKey].Count(); i++)
             {
                 _canvas.Children.Remove(_insideNavigation[i].Circle);
                 _canvas.Children.Remove(_insideNavigation[i].TextBlock);
             }
+            _insideNavigation = null;
         }
 
         private void DrawInsideNavigation()
         {
-            for (int i = 0; i < VectorTypes[_vectorTypeKey].Count(); i++)
+            _insideNavigation = VectorLoader.VectorTypes[VectorTypeKey]
+               .Select(x => new CircleWithTextBlock
+               {
+                   Circle = new Ellipse() { Height = CircleSize, Width = CircleSize, Fill = new SolidColorBrush(Colors.Blue) },
+                   TextBlock = new TextBlock { Text = x, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) }
+               })
+               .ToArray();
+            for (int i = 0; i < VectorLoader.VectorTypes[VectorTypeKey].Count(); i++)
             {
                 if (_vectorPoints[i] != null)
                 {
@@ -136,6 +172,7 @@ namespace VectorDesigner
                     Canvas.SetTop(_insideNavigation[i].TextBlock, vectorPointCanvasPosition.Y - 5);
                 }
             }
+            RedrawHighlightingOfPointSelection();
         }
 
         private void RedrawBottomNavigation()
@@ -150,21 +187,22 @@ namespace VectorDesigner
             {
                 return;
             }
-            for (int i = 0; i < VectorTypes[_vectorTypeKey].Count(); i++)
+            for (int i = 0; i < VectorLoader.VectorTypes[VectorTypeKey].Count(); i++)
             {
                 _canvas.Children.Remove(_bottomNavigation[i]);
             }
             _canvas.Children.Remove(_vectorTypeKeyTextBlock);
+            _bottomNavigation = null;
         }
 
         private void DrawBottomNavigation()
         {
-            _bottomNavigation = VectorTypes[_vectorTypeKey]
+            _bottomNavigation = VectorLoader.VectorTypes[VectorTypeKey]
                 .Select(x => new TextBlock { Text = x, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) })
                 .ToArray();
-            _vectorTypeKeyTextBlock = new TextBlock { Text = _vectorTypeKey, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) };
+            _vectorTypeKeyTextBlock = new TextBlock { Text = VectorTypeKey, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) };
 
-            for (int i = 0; i < VectorTypes[_vectorTypeKey].Count(); i++)
+            for (int i = 0; i < VectorLoader.VectorTypes[VectorTypeKey].Count(); i++)
             {
                 _canvas.Children.Add(_bottomNavigation[i]);
                 Canvas.SetLeft(_bottomNavigation[i], i * 80 + 5);
@@ -175,9 +213,9 @@ namespace VectorDesigner
             Canvas.SetTop(_vectorTypeKeyTextBlock, 0);
         }
 
-        private void RedrawHighlightingOfNavigationSelection()
+        private void RedrawHighlightingOfPointSelection()
         {
-            for (int i = 0; i < VectorTypes[_vectorTypeKey].Count(); i++)
+            for (int i = 0; i < VectorLoader.VectorTypes[VectorTypeKey].Count(); i++)
             {
                 if (i == _vectorPointIndex)
                 {
@@ -192,9 +230,29 @@ namespace VectorDesigner
             }
         }
 
+        private void RedrawHighlightingOfVectorTypeSelection()
+        {
+            for (int i = 0; i < VectorLoader.VectorTypes.Keys.Count(); i++)
+            {
+                if (i == _vectorTypeKeyIndex)
+                {
+                    _dialogForSelectingVectorType[i].FontWeight = FontWeights.Bold;
+                }
+                else
+                {
+                    _dialogForSelectingVectorType[i].FontWeight = FontWeights.Normal;
+                }
+            }
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            KeyDown += new KeyEventHandler(MainWindow_KeyDown);
+        }
+
         private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (_imagePath == null)
+            if (_imagePath == null || _isInDialogForSelectingVectorType)
             {
                 return;
             }
@@ -213,11 +271,6 @@ namespace VectorDesigner
             }
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            KeyDown += new KeyEventHandler(MainWindow_KeyDown);
-        }
-
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
         {
             switch (e.Key)
@@ -227,19 +280,35 @@ namespace VectorDesigner
                     {
                         return;
                     }
-                    _vectorPointIndex = (_vectorPointIndex + 1) % VectorTypes[_vectorTypeKey].Count();
-                    RedrawHighlightingOfNavigationSelection();
+                    if (_isInDialogForSelectingVectorType)
+                    {
+                        _vectorTypeKeyIndex = (_vectorTypeKeyIndex + 1) % VectorLoader.VectorTypes.Keys.Count();
+                        RedrawHighlightingOfVectorTypeSelection();
+                    }
+                    else
+                    {
+                        _vectorPointIndex = (_vectorPointIndex + 1) % VectorLoader.VectorTypes[VectorTypeKey].Count();
+                        RedrawHighlightingOfPointSelection();
+                    }
                     break;
                 case Key.Left:
                     if (_imagePath == null)
                     {
                         return;
                     }
-                    _vectorPointIndex = _vectorPointIndex == 0 ? VectorTypes[_vectorTypeKey].Count() - 1 : _vectorPointIndex - 1;
-                    RedrawHighlightingOfNavigationSelection();
+                    if (_isInDialogForSelectingVectorType)
+                    {
+                        _vectorTypeKeyIndex = _vectorTypeKeyIndex == 0 ? VectorLoader.VectorTypes.Keys.Count() - 1 : _vectorTypeKeyIndex - 1;
+                        RedrawHighlightingOfVectorTypeSelection();
+                    }
+                    else
+                    {
+                        _vectorPointIndex = _vectorPointIndex == 0 ? VectorLoader.VectorTypes[VectorTypeKey].Count() - 1 : _vectorPointIndex - 1;
+                        RedrawHighlightingOfPointSelection();
+                    }
                     break;
                 case Key.S:
-                    if (_imagePath == null)
+                    if (_imagePath == null || _isInDialogForSelectingVectorType)
                     {
                         return;
                     }
@@ -249,7 +318,22 @@ namespace VectorDesigner
                     }
                     break;
                 case Key.O:
+                    if (_isInDialogForSelectingVectorType)
+                    {
+                        _isInDialogForSelectingVectorType = false;
+                        UndrawDialogForSelectingVectorType();
+                    }
                     Open();
+                    break;
+                case Key.Enter:
+                    if (!_isInDialogForSelectingVectorType)
+                    {
+                        return;
+                    }
+                    _vectorPoints = new Point?[VectorLoader.VectorTypes[VectorTypeKey].Count()];
+                    _isInDialogForSelectingVectorType = false;
+                    UndrawDialogForSelectingVectorType();
+                    Redraw();
                     break;
             }
         }
@@ -259,7 +343,7 @@ namespace VectorDesigner
             var dirPath = System.IO.Path.GetDirectoryName(_imagePath);
             var imageFileName = System.IO.Path.GetFileNameWithoutExtension(_imagePath);
             var content = new StringBuilder();
-            content.AppendLine(_vectorTypeKey);
+            content.AppendLine(VectorTypeKey);
             content.Append(string.Join(Environment.NewLine, _vectorPoints));
             File.WriteAllText(System.IO.Path.Combine(dirPath, $"{imageFileName}{VectorLoader.VectorFileExtension}"), content.ToString());
         }
@@ -273,33 +357,57 @@ namespace VectorDesigner
             {
                 return;
             }
-            _imagePath = openFileDialog.FileName;
+            Open(openFileDialog.FileName);
+        }
+
+        private void Open(string imagePath)
+        {
+            _imagePath = imagePath;
             var vector = VectorLoader.Load(_imagePath);
             if (vector == null)
             {
-                _vectorTypeKey = VectorTypes.Keys.First();
-                _vectorPoints = new Point?[VectorTypes[_vectorTypeKey].Count()];
+                Undraw();
+                _vectorTypeKeyIndex = 0;
+                _vectorPointIndex = 0;
+                DrawDialogForSelectingVectorType();
             }
             else
             {
-                _vectorTypeKey = vector.TypeKey;
+                Undraw();
+                _vectorTypeKeyIndex = VectorLoader.VectorTypes.Keys.TakeWhile(x => x != vector.TypeKey).Count();
                 _vectorPoints = vector.Points.Cast<Point?>().ToArray();
+                _vectorPointIndex = 0;
+                Redraw();
             }
-            
-            _vectorPointIndex = 0;
+        }
 
-            _insideNavigation = VectorTypes[_vectorTypeKey]
-                .Select(x => new CircleWithTextBlock
-                {
-                    Circle = new Ellipse() { Height = CircleSize, Width = CircleSize, Fill = new SolidColorBrush(Colors.Blue) },
-                    TextBlock = new TextBlock { Text = x, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) }
-                })
+        private void UndrawDialogForSelectingVectorType()
+        {
+            if (_dialogForSelectingVectorType == null)
+            {
+                return;
+            }
+            for (int i = 0; i < _dialogForSelectingVectorType.Count(); i++)
+            {
+                _canvas.Children.Remove(_dialogForSelectingVectorType[i]);
+            }
+        }
+
+        private void DrawDialogForSelectingVectorType()
+        {
+            _isInDialogForSelectingVectorType = true;
+            Undraw();
+            _dialogForSelectingVectorType = VectorLoader.VectorTypes.Keys
+                .Select(x => new TextBlock { Text = x, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) })
                 .ToArray();
 
-            RedrawBottomNavigation();
-            DrawWpfImage();
-            RedrawInsideNavigation();
-            RedrawHighlightingOfNavigationSelection();
+            for (int i = 0; i < _dialogForSelectingVectorType.Count(); i++)
+            {
+                _canvas.Children.Add(_dialogForSelectingVectorType[i]);
+                Canvas.SetLeft(_dialogForSelectingVectorType[i], i * 80 + 5);
+                Canvas.SetTop(_dialogForSelectingVectorType[i], WindowSize / 2);
+            }
+            RedrawHighlightingOfVectorTypeSelection();
         }
     }
 }
