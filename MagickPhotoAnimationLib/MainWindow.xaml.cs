@@ -18,6 +18,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ImageMagick;
+using VectorDesigner;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace MagickPhotoAnimationLib
@@ -42,8 +43,20 @@ namespace MagickPhotoAnimationLib
                 outFile.Delete();
             }
 
-            var startImg = new MagickImage(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
+            const string startImgPath = @"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg";
 
+            var startImg = new MagickImage(startImgPath);
+            var vector = VectorLoader.Load(startImgPath);
+            if (vector.TypeKey != "Limb")
+            {
+                throw new NotImplementedException();
+            }
+            var topPoint = vector.Points[VectorLoader.VectorTypes[vector.TypeKey].TakeWhile(x => x != "Top").Count()];
+            var rotatedImage = startImg.Clone();
+            rotatedImage.Rotate(10);
+            PreviewImgInWpf((MagickImage)rotatedImage);
+
+#if false
             var compositeImage = new MagickImage(MagickColor.FromRgb(200, 255, 255), OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
             var image1 = startImg.Clone();
             var image2 = startImg.Clone();
@@ -53,7 +66,7 @@ namespace MagickPhotoAnimationLib
             compositeImage.Composite(image1, -150, -50);
             compositeImage.Composite(image2, 100, 100);
             PreviewImgInWpf(compositeImage);
-
+#endif
 #if false
             var startCropWidth = startImg.Width;
             var startCropHeight = startImg.Height;
