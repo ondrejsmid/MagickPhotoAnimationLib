@@ -67,7 +67,7 @@ namespace VectorDesigner
             _canvas = canvas1;
 
 #if true
-            Open(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
+            Open(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\camel.png");
 #endif
 #if false
             var testCircle = new Ellipse() { Height = 5, Width = 5, Fill = new SolidColorBrush(Colors.Red) };
@@ -352,7 +352,7 @@ namespace VectorDesigner
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.InitialDirectory = @"C:\Users\ondrej\MagickPhotoAnimationLib\images";
-            openFileDialog.Filter = "Image Files(*.jpg;*.jpeg)|*.jpg;*.jpeg;";
+            openFileDialog.Filter = "Image files|*.png;*.jpg;*.jpeg;";
             if (openFileDialog.ShowDialog() != true)
             {
                 return;

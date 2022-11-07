@@ -52,10 +52,25 @@ namespace MagickPhotoAnimationLib
                 throw new NotImplementedException();
             }
             var topPoint = vector.Points[VectorLoader.VectorTypes[vector.TypeKey].TakeWhile(x => x != "Top").Count()];
-            var rotatedImage = startImg.Clone();
-            rotatedImage.Rotate(10);
-            PreviewImgInWpf((MagickImage)rotatedImage);
+            
+            var camel = new MagickImage(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\camel.png");
+            camel.BackgroundColor = MagickColors.Transparent;
 
+            var camelRotated = camel.Clone();
+            camelRotated.Rotate(-180);
+
+            var compositeImage = new MagickImage(MagickColor.FromRgb(200, 255, 255), OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
+            compositeImage.Composite(camel, Gravity.Center, CompositeOperator.Over);
+            compositeImage.Composite(camelRotated, Gravity.Center, -110, -300, CompositeOperator.Over);
+
+            PreviewImgInWpf(compositeImage);
+
+            /*using (MagickImage mimg = new MagickImage(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\camel.png"))
+            {
+                mimg.BackgroundColor = MagickColors.Transparent;
+                mimg.Rotate(20);
+                mimg.Write(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\bbb.png");
+            }*/
 #if false
             var compositeImage = new MagickImage(MagickColor.FromRgb(200, 255, 255), OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
             var image1 = startImg.Clone();
