@@ -16,22 +16,16 @@ namespace VectorDesigner
 
         public static readonly Dictionary<string, string[]> VectorTypes = new Dictionary<string, string[]>
         {
-            { "Limb", new string[] { "Top", "Bottom" } },
-            { "Bbb", new string[] { "p1", "p2", "p3" } }
+            { "Limb", new string[] { "Pivot", "Tail" } },
+            { "LimbTest", new string[] { "Center", "TopLeft", "BottomRight", "Pivot", "Tail", "Pivot2", "Tail2" } }
         };
 
-        public class Vector
-        {
-            public string TypeKey;
-            public Point[] Points;
-        }
-
-        public static Vector Load(string imagePath)
+        public static Vector Load(string imgPath)
         {
             var vector = new Vector();
 
-            var dirPath = Path.GetDirectoryName(imagePath);
-            var imageFileName = Path.GetFileNameWithoutExtension(imagePath);
+            var dirPath = Path.GetDirectoryName(imgPath);
+            var imageFileName = Path.GetFileNameWithoutExtension(imgPath);
             var vectorFilePath = Path.Combine(dirPath, $"{imageFileName}{VectorFileExtension}");
             if (!File.Exists(vectorFilePath))
             {
@@ -41,10 +35,17 @@ namespace VectorDesigner
             var lines = vectorFileContent.Split(Environment.NewLine);
             vector.TypeKey = lines[0];
             vector.Points = new Point[lines.Length - 1];
-            for (int i = 1; i < lines.Length; i ++)
+            for (int i = 1; i < lines.Length; i++)
             {
                 vector.Points[i - 1] = Point.Parse(lines[i]);
             }
+            return vector;
+        }
+
+        public static Vector LoadAsPixelShiftFromCenter(string imgPath, int targetImgWidth, int targetImgHeight)
+        {
+            var vector = Load(imgPath);
+            vector.Points = vector.Points.Select(p => new Point((p.X - 0.5) * targetImgWidth, (p.Y - 0.5) * targetImgHeight)).ToArray();
             return vector;
         }
     }

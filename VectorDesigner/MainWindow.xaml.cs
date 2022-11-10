@@ -198,14 +198,14 @@ namespace VectorDesigner
         private void DrawBottomNavigation()
         {
             _bottomNavigation = VectorLoader.VectorTypes[VectorTypeKey]
-                .Select(x => new TextBlock { Text = x, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) })
+                .Select(x => new TextBlock { Text = x, FontSize = 15, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) })
                 .ToArray();
             _vectorTypeKeyTextBlock = new TextBlock { Text = VectorTypeKey, FontSize = 20, Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)) };
 
             for (int i = 0; i < VectorLoader.VectorTypes[VectorTypeKey].Count(); i++)
             {
                 _canvas.Children.Add(_bottomNavigation[i]);
-                Canvas.SetLeft(_bottomNavigation[i], i * 80 + 5);
+                Canvas.SetLeft(_bottomNavigation[i], i * 100 + 5);
                 Canvas.SetTop(_bottomNavigation[i], WindowClientSize + 70);
             }
             _canvas.Children.Add(_vectorTypeKeyTextBlock);

@@ -1,33 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using ImageMagick;
+﻿using ImageMagick;
+using MagickPhotoAnimationLib.MathUtils;
+using Point = System.Windows.Point;
 
 namespace MagickPhotoAnimationLib.Extensions
 {
     internal static class MagickImageExtensions
     {
-        internal static MagickImage GetRotated(this MagickImage magickImage, double degrees, System.Windows.Point pivotPoint)
+        internal static MagickImage GetRotated(this MagickImage magickImage, double degrees, Point pivotPoint, int targetCanvasImageSize)
         {
+            var centerPoint = new Point(magickImage.Width / 2, magickImage.Height / 2);
+
             var rotated = magickImage.Clone();
-
-            var centerPoint = new System.Windows.Point(rotated.Width / 2, rotated.Height / 2);
-
             rotated.Rotate(degrees);
 
-            var rotationAngleInRad = degrees * (Math.PI / 180);
-            var aPoint = pivotPoint;
-            var a = centerPoint.Y - aPoint.Y;
-            var b = centerPoint.X - aPoint.X;
-            var r = Math.Sqrt(Math.Pow(a, 2) + Math.Pow(b, 2));
-            var alpha = Math.Asin(a / r);
-            var aRotated = r * Math.Sin(alpha + rotationAngleInRad);
-            var bRotated = r * Math.Cos(alpha + rotationAngleInRad);
-            var yShift = aRotated - a;
-            var xShift = bRotated - b;
+            var pivotPointShift = Rotation.GetRotatedPointShift(centerPoint.Add(pivotPoint), degrees, centerPoint);
 
-            var canvasImage = new MagickImage(MagickColor.FromRgba(0, 0, 0, 0), 800, 800);
-            canvasImage.Composite(rotated, Gravity.Center, (int)xShift, (int)yShift, CompositeOperator.Over);
+            var canvasImage = new MagickImage(MagickColor.FromRgba(0, 0, 0, 0), targetCanvasImageSize, targetCanvasImageSize);
+            canvasImage.Composite(rotated, Gravity.Center, (int)pivotPointShift.X, (int)pivotPointShift.Y, CompositeOperator.Over);
+
             return canvasImage;
         }
     }
