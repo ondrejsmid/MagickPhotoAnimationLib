@@ -17,6 +17,11 @@ namespace VectorDesigner
         public static readonly Dictionary<string, string[]> VectorTypes = new Dictionary<string, string[]>
         {
             { "Limb", new string[] { "Pivot", "Tail" } },
+            { "Body", new string[] { "Pivot", "ArmR", "ArmL", "LegR", "LegL", "Head"} },
+            { "Head", new string[] { "Pivot" } },
+
+
+            /* test */
             { "LimbTest", new string[] { "Center", "TopLeft", "BottomRight", "Pivot", "Tail", "Pivot2", "Tail2" } }
         };
 

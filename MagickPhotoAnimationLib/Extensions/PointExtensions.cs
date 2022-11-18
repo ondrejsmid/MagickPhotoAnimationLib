@@ -13,5 +13,10 @@ namespace MagickPhotoAnimationLib.Extensions
         {
             return new Point(thisPoint.X - otherPoint.X, thisPoint.Y - otherPoint.Y);
         }
+
+        internal static Point Negate(this Point thisPoint)
+        {
+            return new Point(-thisPoint.X, -thisPoint.Y);
+        }
     }
 }

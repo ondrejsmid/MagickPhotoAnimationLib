@@ -30,7 +30,7 @@ namespace MagickPhotoAnimationLib
         private static readonly float[] ObfuscationMinimizations = { 1, 0.3f };
         private static readonly float ObfuscationMinimization = ObfuscationMinimizations[1];
 
-        private const int OutputScreenWidth = 2500;
+        private const int OutputScreenWidth = 1000;
         private const float OutputScreenRatio = 1.5f;
         private const int OutputFrameRate = 24;
 
@@ -47,33 +47,48 @@ namespace MagickPhotoAnimationLib
 
             var camel = new MagickImageAndVector(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\camel.png");
 
-            var camelTop = camel.GetPoint("Pivot");
+            var camelPivot = camel.GetPoint("Pivot");
             var camelTail = camel.GetPoint("Tail");
 
             var compositeImage = new MagickImage(MagickColor.FromRgb(200, 255, 255), OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
 
             const int degrees = 90;
-            var camelRotated = camel.GetRotated(degrees, camelTop);
+            var camelRotated = camel.GetRotated(degrees, camelPivot);
             compositeImage.Composite(camel.MagickImage, Gravity.Center, CompositeOperator.Over);
             compositeImage.Composite(camelRotated.MagickImage, Gravity.Center, CompositeOperator.Over);
 
-            var camelRotatedTop = camelRotated.GetPoint("Pivot");
+            var camelRotatedPivot = camelRotated.GetPoint("Pivot");
             var camelRotatedTail = camelRotated.GetPoint("Tail");
 
-            var pivotPointRotatedShift = camelTop.Subtract(camelRotatedTop);
+            var camelRotatedPivotShift = camelPivot.Subtract(camelRotatedPivot);
 
-#if true
+            var part2 = new MagickImageAndVector(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\part2.png");
+            var part2Pivot = part2.GetPoint("Pivot");
+
+            compositeImage.Composite(part2.MagickImage, Gravity.Center,
+                camelRotatedTail.Add(camelRotatedPivotShift).Subtract(part2Pivot),
+                CompositeOperator.Over);
+
+
+            const int widthOfCanvasForHuman = 2000;
+
+            var background = new MagickImage(MagickColor.FromRgb(200, 255, 255), widthOfCanvasForHuman, (int)(widthOfCanvasForHuman / OutputScreenRatio));
+
+            var human = new Human(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\ondra0", new Point(widthOfCanvasForHuman, widthOfCanvasForHuman / OutputScreenRatio));
+
+            background.Composite(human.MagickImage, Gravity.Center, CompositeOperator.Over);
+            PreviewImgInWpf(background);
+#if false
             const int testPointBlueSize = 40;
             const int testPointRedSize = 25;
             var testPointBlue = new MagickImage(MagickColor.FromRgb(0, 0, 255), testPointBlueSize, testPointBlueSize);
             var testPointRed = new MagickImage(MagickColor.FromRgb(255, 0, 0), testPointRedSize, testPointRedSize);
 
-            compositeImage.Composite(testPointBlue, Gravity.Center, (int)camelTop.X, (int)camelTop.Y, CompositeOperator.Over);
-            compositeImage.Composite(testPointBlue, Gravity.Center, (int)camelTail.X, (int)camelTail.Y, CompositeOperator.Over);
-            compositeImage.Composite(testPointRed, Gravity.Center, (int)camelRotatedTop.Add(pivotPointRotatedShift).X, (int)camelRotatedTop.Add(pivotPointRotatedShift).Y, CompositeOperator.Over);
-            compositeImage.Composite(testPointRed, Gravity.Center, (int)camelRotatedTail.Add(pivotPointRotatedShift).X, (int)camelRotatedTail.Add(pivotPointRotatedShift).Y, CompositeOperator.Over);
+            compositeImage.Composite(testPointBlue, Gravity.Center, camelPivot, CompositeOperator.Over);
+            compositeImage.Composite(testPointBlue, Gravity.Center, camelTail, CompositeOperator.Over);
+            compositeImage.Composite(testPointRed, Gravity.Center, camelRotatedPivot.Add(camelRotatedPivotShift), CompositeOperator.Over);
+            compositeImage.Composite(testPointRed, Gravity.Center, camelRotatedTail.Add(camelRotatedPivotShift), CompositeOperator.Over);
 #endif
-            PreviewImgInWpf(compositeImage);
 #if false
             var startImg = new MagickImage(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
             var compositeImage = new MagickImage(MagickColor.FromRgb(200, 255, 255), OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
