@@ -52,7 +52,7 @@ namespace MagickPhotoAnimationLib
 
             var compositeImage = new MagickImage(MagickColor.FromRgb(200, 255, 255), OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
 
-            const int degrees = 90;
+            const double degrees = 90;
             var camelRotated = camel.GetRotated(degrees, camelPivot);
             compositeImage.Composite(camel.MagickImage, Gravity.Center, CompositeOperator.Over);
             compositeImage.Composite(camelRotated.MagickImage, Gravity.Center, CompositeOperator.Over);
@@ -69,16 +69,6 @@ namespace MagickPhotoAnimationLib
                 camelRotatedTail.Add(camelRotatedPivotShift).Subtract(part2Pivot),
                 CompositeOperator.Over);
 
-
-            const int widthOfCanvasForHuman = 2000;
-
-            var background = new MagickImage(MagickColor.FromRgb(200, 255, 255), widthOfCanvasForHuman, (int)(widthOfCanvasForHuman / OutputScreenRatio));
-
-            var human = new Human(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\ondra0", new Point(widthOfCanvasForHuman, widthOfCanvasForHuman / OutputScreenRatio));
-
-            background.Composite(human.MagickImage, Gravity.Center, CompositeOperator.Over);
-            PreviewImgInWpf(background);
-#if false
             const int testPointBlueSize = 40;
             const int testPointRedSize = 25;
             var testPointBlue = new MagickImage(MagickColor.FromRgb(0, 0, 255), testPointBlueSize, testPointBlueSize);
@@ -88,6 +78,29 @@ namespace MagickPhotoAnimationLib
             compositeImage.Composite(testPointBlue, Gravity.Center, camelTail, CompositeOperator.Over);
             compositeImage.Composite(testPointRed, Gravity.Center, camelRotatedPivot.Add(camelRotatedPivotShift), CompositeOperator.Over);
             compositeImage.Composite(testPointRed, Gravity.Center, camelRotatedTail.Add(camelRotatedPivotShift), CompositeOperator.Over);
+
+            PreviewImgInWpf(compositeImage);
+#if false
+            const int widthOfCanvasForHuman = 2000;
+
+            var background = new MagickImage(MagickColor.FromRgb(200, 255, 255), widthOfCanvasForHuman, (int)(widthOfCanvasForHuman / OutputScreenRatio));
+
+            var human = new Human(
+                @"C:\Users\ondrej\MagickPhotoAnimationLib\images\ondra0",
+                new Point(widthOfCanvasForHuman, widthOfCanvasForHuman / OutputScreenRatio),
+                new Dictionary<HumanSkeletonPartName, double>
+                {
+                    //{ HumanSkeletonPartName.Body, -5 },
+                    { HumanSkeletonPartName.Head, -60 },
+                    { HumanSkeletonPartName.ArmRTop, -90 },
+                    { HumanSkeletonPartName.ArmLTop, -70 },
+                    { HumanSkeletonPartName.LegRTop, 90 },
+                    { HumanSkeletonPartName.LegLTop, -90 },
+                }
+                );
+
+            background.Composite(human.MagickImage, Gravity.Center, CompositeOperator.Over);
+            PreviewImgInWpf(background);
 #endif
 #if false
             var startImg = new MagickImage(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");

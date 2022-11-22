@@ -27,6 +27,11 @@ namespace MagickPhotoAnimationLib
             return Vector.Points[VectorLoader.VectorTypes[Vector.TypeKey].TakeWhile(x => x != name).Count()];
         }
 
+        public Point Pivot
+        {
+            get => GetPoint("Pivot");
+        }
+
         public MagickImageAndVector GetRotated(double degrees, Point pivotPoint)
         {
             var canvasImageSize = 2 * (int)Math.Sqrt(Math.Pow(MagickImage.Width, 2) + Math.Pow(MagickImage.Height, 2));
@@ -49,6 +54,13 @@ namespace MagickPhotoAnimationLib
                 MagickImage = newMagickImage,
                 Vector = vectorRotated
             };
+        }
+
+        public void Rotate(double degrees, Point pivotPoint)
+        {
+            var rotated = GetRotated(degrees, pivotPoint);
+            MagickImage = rotated.MagickImage;
+            Vector = rotated.Vector;
         }
     }
 }

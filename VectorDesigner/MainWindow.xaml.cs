@@ -66,7 +66,7 @@ namespace VectorDesigner
             Content = canvas1;
             _canvas = canvas1;
 
-#if true
+#if false
             Open(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\camel.png");
 #endif
 #if false
@@ -351,7 +351,7 @@ namespace VectorDesigner
         private void Open()
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.InitialDirectory = @"C:\Users\ondrej\MagickPhotoAnimationLib\images";
+            openFileDialog.InitialDirectory = @"C:\Users\ondrej\MagickPhotoAnimationLib\images\ondra0";
             openFileDialog.Filter = "Image files|*.png;*.jpg;*.jpeg;";
             if (openFileDialog.ShowDialog() != true)
             {
