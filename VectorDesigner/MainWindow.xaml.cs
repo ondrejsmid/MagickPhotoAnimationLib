@@ -351,7 +351,7 @@ namespace VectorDesigner
         private void Open()
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.InitialDirectory = @"C:\Users\ondrej\MagickPhotoAnimationLib\images\ondra0";
+            openFileDialog.InitialDirectory = @"C:\Users\ondrej\MagickPhotoAnimationLib\images";
             openFileDialog.Filter = "Image files|*.png;*.jpg;*.jpeg;";
             if (openFileDialog.ShowDialog() != true)
             {

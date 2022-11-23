@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg8"
+   inkscape:export-filename="C:\Users\ondrej\MagickPhotoAnimationLib\images\drawing1-pivotRotated.png"
+   inkscape:export-xdpi="36.26128"
+   inkscape:export-ydpi="36.26128"
+   inkscape:version="1.0.2-2 (e86c870879, 2021-01-15)"
+   sodipodi:docname="drawing1-pivotRotated.svg">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.7"
+     inkscape:cx="390.60223"
+     inkscape:cy="500.92387"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     inkscape:document-rotation="0"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1129"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#ff0000;stroke:none;stroke-width:4.99999"
+       id="rect831"
+       width="8.0180855"
+       height="8.0180855"
+       x="108.17706"
+       y="-134.82729"
+       inkscape:transform-center-x="-0.36377658"
+       inkscape:transform-center-y="0.1621191"
+       transform="rotate(75)" />
+    <rect
+       style="fill:#008000;stroke:none;stroke-width:4.99999"
+       id="rect833"
+       width="8.5526247"
+       height="8.5526247"
+       x="139.18031"
+       y="-84.046089"
+       inkscape:transform-center-x="40.851849"
+       inkscape:transform-center-y="43.579437"
+       transform="rotate(75)" />
+    <rect
+       style="fill:#87cdde;stroke:#8cbdd9;stroke-width:4.99999"
+       id="rect835-0"
+       width="2.4054255"
+       height="2.4054255"
+       x="103.79729"
+       y="147.29729" />
+  </g>
+</svg>

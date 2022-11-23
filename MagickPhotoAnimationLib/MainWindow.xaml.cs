@@ -45,40 +45,34 @@ namespace MagickPhotoAnimationLib
                 outFile.Delete();
             }
 
-            var camel = new MagickImageAndVector(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\camel.png");
+            var drawing1 = new MagickImageAndVector(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\drawing1.png");
 
-            var camelPivot = camel.GetPoint("Pivot");
-            var camelTail = camel.GetPoint("Tail");
+            var drawing1Pivot = drawing1.GetPoint("Pivot");
+            var drawing1Tail = drawing1.GetPoint("Tail");
 
             var compositeImage = new MagickImage(MagickColor.FromRgb(200, 255, 255), OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
 
-            const double degrees = 90;
-            var camelRotated = camel.GetRotated(degrees, camelPivot);
-            compositeImage.Composite(camel.MagickImage, Gravity.Center, CompositeOperator.Over);
-            compositeImage.Composite(camelRotated.MagickImage, Gravity.Center, CompositeOperator.Over);
+            const double degrees = 75;
+            var drawing1Rotated = drawing1.GetRotated(degrees, drawing1Pivot);
+            compositeImage.Composite(drawing1.MagickImage, Gravity.Center, CompositeOperator.Over);
+            compositeImage.Composite(drawing1Rotated.MagickImage, Gravity.Center, CompositeOperator.Over);
 
-            var camelRotatedPivot = camelRotated.GetPoint("Pivot");
-            var camelRotatedTail = camelRotated.GetPoint("Tail");
+            var camelRotatedPivot = drawing1Rotated.GetPoint("Pivot");
+            var camelRotatedTail = drawing1Rotated.GetPoint("Tail");
 
-            var camelRotatedPivotShift = camelPivot.Subtract(camelRotatedPivot);
-
-            var part2 = new MagickImageAndVector(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\part2.png");
-            var part2Pivot = part2.GetPoint("Pivot");
-
-            compositeImage.Composite(part2.MagickImage, Gravity.Center,
-                camelRotatedTail.Add(camelRotatedPivotShift).Subtract(part2Pivot),
-                CompositeOperator.Over);
+            var camelRotatedPivotShift = drawing1Pivot.Subtract(camelRotatedPivot);
 
             const int testPointBlueSize = 40;
             const int testPointRedSize = 25;
             var testPointBlue = new MagickImage(MagickColor.FromRgb(0, 0, 255), testPointBlueSize, testPointBlueSize);
             var testPointRed = new MagickImage(MagickColor.FromRgb(255, 0, 0), testPointRedSize, testPointRedSize);
 
-            compositeImage.Composite(testPointBlue, Gravity.Center, camelPivot, CompositeOperator.Over);
-            compositeImage.Composite(testPointBlue, Gravity.Center, camelTail, CompositeOperator.Over);
+            /*
+            compositeImage.Composite(testPointBlue, Gravity.Center, drawing1Pivot, CompositeOperator.Over);
+            compositeImage.Composite(testPointBlue, Gravity.Center, drawing1Tail, CompositeOperator.Over);
             compositeImage.Composite(testPointRed, Gravity.Center, camelRotatedPivot.Add(camelRotatedPivotShift), CompositeOperator.Over);
             compositeImage.Composite(testPointRed, Gravity.Center, camelRotatedTail.Add(camelRotatedPivotShift), CompositeOperator.Over);
-
+            */
             PreviewImgInWpf(compositeImage);
 #if false
             const int widthOfCanvasForHuman = 2000;
