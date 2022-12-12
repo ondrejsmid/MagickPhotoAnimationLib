@@ -1,0 +1,13 @@
+Pivot is the red point
+rotation by 75 degrees
+
+image size = (972, 1458)
+
+center = (486, 729) in pixel offset from image top-left
+
+following values are pixel shifts from image center
+
+head:
+Pivot: (-40.9612756264237, -415.309090909091)
+
+head-pivotRotated: 876 - 486,  583 - 729 = (390, -146)

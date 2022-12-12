@@ -138,12 +138,9 @@ namespace MagickPhotoAnimationLib
                 ComputeRotationShift(HumanSkeletonPartName.LegLTop, _legLTop);
                 ComputeRotationShift(HumanSkeletonPartName.LegLBottom, _legLBottom);
 
-                var mainPivotPointShift = Pivot.Negate();
                 var canvasImage = new MagickImage(MagickColor.FromRgba(0, 0, 0, 0), (int)_canvasSize.X, (int)_canvasSize.Y);
 
                 var shiftsForComposition = GetShiftsForComposition();
-
-                canvasImage.Composite(_body.MagickImage, Gravity.Center, mainPivotPointShift, CompositeOperator.Over);
 
                 foreach (var child in new[] {
                     _head,

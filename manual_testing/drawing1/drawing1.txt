@@ -1,5 +1,5 @@
-Pivot is a red point
-Tail is a green point
+Pivot is the red point
+Tail is the green point
 rotation by 75 degrees
 
 center = (150, 212) in pixel offset from image top-left
@@ -13,3 +13,7 @@ Tail: (266 - 150, 179 - 212) = (116, -33)
 drawing1-centerRotated:
 Pivot: (271 - 150, 254 - 212) = (121, 42)
 Tail: (212 - 150, 316 - 212) = (62, 104)
+
+drawing1-pivotRotated:
+Pivot: (221 - 150, 106 - 212) = (71, -106)
+Tail: (163 - 150, 168 - 212) = (13, -44)

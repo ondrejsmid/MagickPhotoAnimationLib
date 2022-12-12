@@ -42,8 +42,7 @@ namespace MagickPhotoAnimationLib
                 TypeKey = Vector.TypeKey,
                 Points = Vector.Points.Select(p =>
                 {
-                    var newPWithoutPivotShift = p.Subtract(Rotation.GetRotatedPointShift(p, degrees, new Point(0, 0)));
-                    return newPWithoutPivotShift;
+                    return Rotation.GetPointRotatedByCenter(p, degrees);
                 }).ToArray()
             };
 

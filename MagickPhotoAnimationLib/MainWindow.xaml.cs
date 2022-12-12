@@ -27,7 +27,7 @@ namespace MagickPhotoAnimationLib
 {
     public partial class MainWindow : Window
     {
-        private static readonly float[] ObfuscationMinimizations = { 1, 0.3f };
+        private static readonly float[] ObfuscationMinimizations = { 1, 0.8f };
         private static readonly float ObfuscationMinimization = ObfuscationMinimizations[1];
 
         private const int OutputScreenWidth = 1000;
@@ -45,6 +45,34 @@ namespace MagickPhotoAnimationLib
                 outFile.Delete();
             }
 
+#if false
+            var head = new MagickImageAndVector(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\ondra0\head.png");
+
+            var headPivot = head.GetPoint("Pivot");
+
+            const int compositeImageSize = 2000;
+            var compositeImage = new MagickImage(MagickColor.FromRgb(200, 255, 255), compositeImageSize, (int)(compositeImageSize / OutputScreenRatio));
+
+            const double degrees = -75;
+            var headRotated = head.GetRotated(degrees, headPivot);
+            compositeImage.Composite(head.MagickImage, Gravity.Center, CompositeOperator.Over);
+            compositeImage.Composite(headRotated.MagickImage, Gravity.Center, CompositeOperator.Over);
+
+            var headRotatedPivot = headRotated.GetPoint("Pivot");
+
+            const int testPointBlueSize = 40;
+            const int testPointRedSize = 25;
+            var testPointBlue = new MagickImage(MagickColor.FromRgb(0, 0, 255), testPointBlueSize, testPointBlueSize);
+            var testPointRed = new MagickImage(MagickColor.FromRgb(255, 0, 0), testPointRedSize, testPointRedSize);
+
+            var rotatedPivotShift = headPivot.Subtract(headRotatedPivot);
+
+            compositeImage.Composite(testPointBlue, Gravity.Center, headPivot, CompositeOperator.Over);
+            compositeImage.Composite(testPointRed, Gravity.Center, headRotatedPivot.Add(rotatedPivotShift), CompositeOperator.Over);
+            
+            PreviewImgInWpf(compositeImage);
+#endif
+#if false
             var drawing1 = new MagickImageAndVector(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\drawing1.png");
 
             var drawing1Pivot = drawing1.GetPoint("Pivot");
@@ -52,44 +80,47 @@ namespace MagickPhotoAnimationLib
 
             var compositeImage = new MagickImage(MagickColor.FromRgb(200, 255, 255), OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
 
-            const double degrees = 75;
+            const double degrees = -75;
             var drawing1Rotated = drawing1.GetRotated(degrees, drawing1Pivot);
             compositeImage.Composite(drawing1.MagickImage, Gravity.Center, CompositeOperator.Over);
             compositeImage.Composite(drawing1Rotated.MagickImage, Gravity.Center, CompositeOperator.Over);
 
-            var camelRotatedPivot = drawing1Rotated.GetPoint("Pivot");
-            var camelRotatedTail = drawing1Rotated.GetPoint("Tail");
-
-            var camelRotatedPivotShift = drawing1Pivot.Subtract(camelRotatedPivot);
+            var drawing1RotatedPivot = drawing1Rotated.GetPoint("Pivot");
+            var drawing1RotatedTail = drawing1Rotated.GetPoint("Tail");
 
             const int testPointBlueSize = 40;
             const int testPointRedSize = 25;
             var testPointBlue = new MagickImage(MagickColor.FromRgb(0, 0, 255), testPointBlueSize, testPointBlueSize);
             var testPointRed = new MagickImage(MagickColor.FromRgb(255, 0, 0), testPointRedSize, testPointRedSize);
 
-            /*
-            compositeImage.Composite(testPointBlue, Gravity.Center, drawing1Pivot, CompositeOperator.Over);
-            compositeImage.Composite(testPointBlue, Gravity.Center, drawing1Tail, CompositeOperator.Over);
-            compositeImage.Composite(testPointRed, Gravity.Center, camelRotatedPivot.Add(camelRotatedPivotShift), CompositeOperator.Over);
-            compositeImage.Composite(testPointRed, Gravity.Center, camelRotatedTail.Add(camelRotatedPivotShift), CompositeOperator.Over);
-            */
+            var rotatedPivotShift = drawing1RotatedPivot.Subtract(drawing1RotatedPivot);
+
+            //compositeImage.Composite(testPointBlue, Gravity.Center, drawing1Pivot, CompositeOperator.Over);
+            //compositeImage.Composite(testPointBlue, Gravity.Center, drawing1Tail, CompositeOperator.Over);
+            //compositeImage.Composite(testPointRed, Gravity.Center, drawing1RotatedPivot.Add(rotatedPivotShift), CompositeOperator.Over);
+            //compositeImage.Composite(testPointRed, Gravity.Center, drawing1RotatedTail.Add(rotatedPivotShift), CompositeOperator.Over);
+            
             PreviewImgInWpf(compositeImage);
-#if false
+#endif
+#if true
             const int widthOfCanvasForHuman = 2000;
 
             var background = new MagickImage(MagickColor.FromRgb(200, 255, 255), widthOfCanvasForHuman, (int)(widthOfCanvasForHuman / OutputScreenRatio));
+
+            const int legTopAngle = 70;
 
             var human = new Human(
                 @"C:\Users\ondrej\MagickPhotoAnimationLib\images\ondra0",
                 new Point(widthOfCanvasForHuman, widthOfCanvasForHuman / OutputScreenRatio),
                 new Dictionary<HumanSkeletonPartName, double>
                 {
-                    //{ HumanSkeletonPartName.Body, -5 },
-                    { HumanSkeletonPartName.Head, -60 },
-                    { HumanSkeletonPartName.ArmRTop, -90 },
-                    { HumanSkeletonPartName.ArmLTop, -70 },
-                    { HumanSkeletonPartName.LegRTop, 90 },
-                    { HumanSkeletonPartName.LegLTop, -90 },
+                    { HumanSkeletonPartName.Body, 50 },
+                    { HumanSkeletonPartName.Head, 0 },
+                    //{ HumanSkeletonPartName.ArmRTop, -90 },
+                    //{ HumanSkeletonPartName.ArmLTop, -70 },
+                    //{ HumanSkeletonPartName.LegRTop, 90 },
+                    { HumanSkeletonPartName.LegLTop, legTopAngle },
+                    { HumanSkeletonPartName.LegLBottom, legTopAngle },
                 }
                 );
 

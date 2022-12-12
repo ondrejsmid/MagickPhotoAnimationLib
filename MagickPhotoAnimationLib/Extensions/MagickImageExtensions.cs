@@ -13,15 +13,13 @@ namespace MagickPhotoAnimationLib.Extensions
 
         internal static MagickImage GetRotated(this MagickImage thisImage, double degrees, Point pivotPoint, int targetCanvasImageSize)
         {
-            var centerPoint = new Point(thisImage.Width / 2, thisImage.Height / 2);
-
             var rotated = thisImage.Clone();
-            rotated.Rotate(degrees);
+            rotated.Rotate(-degrees);
 
-            var pivotPointShift = Rotation.GetRotatedPointShift(centerPoint.Add(pivotPoint), degrees, centerPoint);
+            var rotatedPivotShift = pivotPoint.Subtract(Rotation.GetPointRotatedByCenter(pivotPoint, degrees));
 
             var canvasImage = new MagickImage(MagickColor.FromRgba(0, 0, 0, 0), targetCanvasImageSize, targetCanvasImageSize);
-            canvasImage.Composite(rotated, Gravity.Center, (int)pivotPointShift.X, (int)pivotPointShift.Y, CompositeOperator.Over);
+            canvasImage.Composite(rotated, Gravity.Center, (int)rotatedPivotShift.X, (int)rotatedPivotShift.Y, CompositeOperator.Over);
 
             return canvasImage;
         }
