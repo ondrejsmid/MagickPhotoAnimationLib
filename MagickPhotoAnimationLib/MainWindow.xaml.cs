@@ -114,56 +114,32 @@ namespace MagickPhotoAnimationLib
 
             const string human0Name = "ondra0";
             const string human0DirPath = @"C:\Users\ondrej\MagickPhotoAnimationLib\images\ondra0";
-
-            //Human.StoreGraphicsToCache(_graphicsCache, human0Name, human0DirPath);
-
-            for (int i = 0; i < 3; i ++)
-            {
-               var human = new Human(
-                   human0DirPath,
-                   human0Name,
-                   _graphicsCache,
-                   new Point(widthOfCanvasForHuman, widthOfCanvasForHuman / OutputScreenRatio),
-                   new Dictionary<HumanSkeletonPartName, double>
-                   {
-                        { HumanSkeletonPartName.Body, 50 },
-                        { HumanSkeletonPartName.Head, 0 },
-                        { HumanSkeletonPartName.LegLTop, legTopAngle },
-                        { HumanSkeletonPartName.LegLBottom, legTopAngle },
-                   }
-               );
-
-                var background = new MagickImage(MagickColor.FromRgb(200, 255, 255), widthOfCanvasForHuman, (int)(widthOfCanvasForHuman / OutputScreenRatio));
-                background.Composite(human.MagickImage, Gravity.Center, CompositeOperator.Over);
-            }
-            
-            /*
+           
             var animationPercentageState = new AnimationPercentageState();
 
             var bodyAngleAnimParam = new AnimationParameter(0, 50, animationPercentageState);
 
-            Animate(0, 0.1, animationPercentageState, () =>
+            Animate(0, 2, animationPercentageState, () =>
             {
                 var human = new Human(
-                human0Name,
-                _graphicsCache,
-                new Point(widthOfCanvasForHuman, widthOfCanvasForHuman / OutputScreenRatio),
-                new Dictionary<HumanSkeletonPartName, double>
-                {
-                    { HumanSkeletonPartName.Body, bodyAngleAnimParam.CurrentValue },
-                    { HumanSkeletonPartName.Head, 0 },
-                    { HumanSkeletonPartName.LegLTop, legTopAngle },
-                    { HumanSkeletonPartName.LegLBottom, legTopAngle },
-                }
+                    human0DirPath,
+                    human0Name,
+                    _graphicsCache,
+                    new Point(widthOfCanvasForHuman, widthOfCanvasForHuman / OutputScreenRatio),
+                    new Dictionary<HumanSkeletonPartName, double>
+                    {
+                        { HumanSkeletonPartName.Body, bodyAngleAnimParam.CurrentValue },
+                        { HumanSkeletonPartName.Head, 0 },
+                        { HumanSkeletonPartName.LegLTop, legTopAngle },
+                        { HumanSkeletonPartName.LegLBottom, legTopAngle },
+                    }
                 );
                 var background = new MagickImage(MagickColor.FromRgb(200, 255, 255), widthOfCanvasForHuman, (int)(widthOfCanvasForHuman / OutputScreenRatio));
                 background.Composite(human.MagickImage, Gravity.Center, CompositeOperator.Over);
                 return background;
             });
 
-
             Application.Current.Shutdown();
-            */
 #endif
 #if false
             var startImg = new MagickImage(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
