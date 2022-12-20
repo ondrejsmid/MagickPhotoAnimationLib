@@ -23,6 +23,7 @@ using MagickPhotoAnimationLib.Extensions;
 using VectorDesigner;
 using static System.Net.Mime.MediaTypeNames;
 using Application = System.Windows.Application;
+using Path = System.IO.Path;
 using Point = System.Windows.Point;
 
 namespace MagickPhotoAnimationLib
@@ -36,9 +37,9 @@ namespace MagickPhotoAnimationLib
         private const float OutputScreenRatio = 1.5f;
         private const int OutputFrameRate = 24;
 
-        public delegate void AnimationTransformationAction(MagickImage currentImg);
-
+        private delegate void AnimationTransformationAction(MagickImage currentImg);
         private int _outputIndex;
+        private GraphicsCache _graphicsCache = new GraphicsCache();
 
         public MainWindow()
         {
@@ -106,23 +107,26 @@ namespace MagickPhotoAnimationLib
             
             PreviewImgInWpf(compositeImage);
 #endif
-#if false
+#if true
             const int widthOfCanvasForHuman = 2000;
 
             var background = new MagickImage(MagickColor.FromRgb(200, 255, 255), widthOfCanvasForHuman, (int)(widthOfCanvasForHuman / OutputScreenRatio));
 
             const int legTopAngle = 70;
 
+            const string human0Name = "ondra0";
+            const string human0DirPath = @"C:\Users\ondrej\MagickPhotoAnimationLib\images\ondra0";
+
+            Human.StoreGraphicsToCache(_graphicsCache, human0Name, human0DirPath);
+
             var human = new Human(
-                @"C:\Users\ondrej\MagickPhotoAnimationLib\images\ondra0",
+                human0Name,
+                _graphicsCache,
                 new Point(widthOfCanvasForHuman, widthOfCanvasForHuman / OutputScreenRatio),
                 new Dictionary<HumanSkeletonPartName, double>
                 {
                     { HumanSkeletonPartName.Body, 50 },
                     { HumanSkeletonPartName.Head, 0 },
-                    //{ HumanSkeletonPartName.ArmRTop, -90 },
-                    //{ HumanSkeletonPartName.ArmLTop, -70 },
-                    //{ HumanSkeletonPartName.LegRTop, 90 },
                     { HumanSkeletonPartName.LegLTop, legTopAngle },
                     { HumanSkeletonPartName.LegLBottom, legTopAngle },
                 }
@@ -131,7 +135,7 @@ namespace MagickPhotoAnimationLib
             background.Composite(human.MagickImage, Gravity.Center, CompositeOperator.Over);
             PreviewImgInWpf(background);
 #endif
-#if true
+#if false
             var startImg = new MagickImage(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
             
             const int endCropWidth = 3000;
