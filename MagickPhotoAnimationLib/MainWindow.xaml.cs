@@ -18,9 +18,11 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ImageMagick;
+using MagickPhotoAnimationLib.Animation;
 using MagickPhotoAnimationLib.Extensions;
 using VectorDesigner;
 using static System.Net.Mime.MediaTypeNames;
+using Application = System.Windows.Application;
 using Point = System.Windows.Point;
 
 namespace MagickPhotoAnimationLib
@@ -33,6 +35,8 @@ namespace MagickPhotoAnimationLib
         private const int OutputScreenWidth = 1000;
         private const float OutputScreenRatio = 1.5f;
         private const int OutputFrameRate = 24;
+
+        public delegate void AnimationTransformationAction(MagickImage currentImg);
 
         private int _outputIndex;
 
@@ -102,7 +106,7 @@ namespace MagickPhotoAnimationLib
             
             PreviewImgInWpf(compositeImage);
 #endif
-#if true
+#if false
             const int widthOfCanvasForHuman = 2000;
 
             var background = new MagickImage(MagickColor.FromRgb(200, 255, 255), widthOfCanvasForHuman, (int)(widthOfCanvasForHuman / OutputScreenRatio));
@@ -127,65 +131,25 @@ namespace MagickPhotoAnimationLib
             background.Composite(human.MagickImage, Gravity.Center, CompositeOperator.Over);
             PreviewImgInWpf(background);
 #endif
-#if false
+#if true
             var startImg = new MagickImage(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
-            var compositeImage = new MagickImage(MagickColor.FromRgb(200, 255, 255), OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
-            var image1 = startImg.Clone();
-            var image2 = startImg.Clone();
-            const int image2Width = 300;
-            image1.Resize(image2Width, (int)(image2Width / OutputScreenRatio));
-            image2.Resize(image2Width, (int)(image2Width / OutputScreenRatio));
-            compositeImage.Composite(image1, -150, -50);
-            compositeImage.Composite(image2, 100, 100);
-            PreviewImgInWpf(compositeImage);
-            startImg.Dispose();
-#endif
-#if false
-            var startImg = new MagickImage(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
-            var startCropWidth = startImg.Width;
-            var startCropHeight = startImg.Height;
-
-            var endCropWidth = 3000;
-            var endCropHeight = (int)(endCropWidth / OutputScreenRatio);
-
-            IMagickImage currentImg = null;
             
-            var animStartTime = 10.3;
-            var animEndTime = 10.6;
+            const int endCropWidth = 3000;
 
-            var animFrameCount = Math.Ceiling((animEndTime - animStartTime) * OutputFrameRate);
+            var animationPercentageState = new AnimationPercentageState();
 
-            var allImagesStopwatch = new Stopwatch();
-            allImagesStopwatch.Start();
+            var cropWidthAnimParam = new AnimationParameter(startImg.Width, endCropWidth, animationPercentageState);
+            var cropHeightAnimParam = new AnimationParameter(startImg.Height, endCropWidth / OutputScreenRatio, animationPercentageState);
 
-            for (int i = 0; i < animFrameCount; i++)
+            Animate(10.3, 10.6, startImg, animationPercentageState, currentImg =>
             {
-                MeasureTime(() =>
-                {
-                    currentImg = startImg.Clone();
+                currentImg.Crop((int)cropWidthAnimParam.CurrentValue, (int)cropHeightAnimParam.CurrentValue, Gravity.Center);
+            });
 
-                }, nameof(startImg.Clone));
-
-                var relativePositionWithinAnimation = i / animFrameCount;
-
-                var currentCropWidth = startCropWidth + (int)((endCropWidth - startCropWidth) * relativePositionWithinAnimation);
-                var currentCropHeight = startCropHeight + (int)((endCropHeight - startCropHeight) * relativePositionWithinAnimation);
-
-                MeasureTime(() =>
-                {
-                    currentImg.Crop(currentCropWidth, currentCropHeight, Gravity.Center);
-
-                }, nameof(startImg.Clone));
-
-                WriteAndDispose(currentImg);
-            }
-
-            allImagesStopwatch.Stop();
-            Debug.WriteLine($"Elapsed Time of all images: {(float)allImagesStopwatch.ElapsedMilliseconds / 1000} s");
-            File.WriteAllText(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\log.txt", ((float)allImagesStopwatch.ElapsedMilliseconds / 1000).ToString());
             startImg.Dispose();
+            
+            Application.Current.Shutdown();
 #endif
-            //Application.Current.Shutdown();
         }
 
         private static void MeasureTime(Action action, string nameOfMeasurement)
@@ -199,18 +163,8 @@ namespace MagickPhotoAnimationLib
 
         private void WriteAndDispose(IMagickImage img)
         {
-            MeasureTime(() =>
-            {
-                img.Resize(OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
-
-            }, nameof(img.Resize));
-
-            MeasureTime(() =>
-            {
-                img.Write($@"C:\Users\ondrej\MagickPhotoAnimationLib\out\sequence\{_outputIndex.ToString("00")}.jpg");
-
-            }, nameof(img.Write));
-
+            img.Resize(OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
+            img.Write($@"C:\Users\ondrej\MagickPhotoAnimationLib\out\sequence\{_outputIndex.ToString("00")}.jpg");
             img.Dispose();
             _outputIndex++;
         }
@@ -226,6 +180,26 @@ namespace MagickPhotoAnimationLib
             previewImage.Write($@"C:\Users\ondrej\MagickPhotoAnimationLib\out\preview_image.jpg");
             previewImage.Dispose();
             Image1.Source = new BitmapImage(new Uri(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\preview_image.jpg"));
+        }
+
+
+        private void Animate(double animStartTime, double animEndTime, MagickImage startImg, AnimationPercentageState animationPercentageState,
+            AnimationTransformationAction animationTransformationAction)
+        {
+            IMagickImage currentImg;
+
+            var animFrameCount = Math.Ceiling((animEndTime - animStartTime) * OutputFrameRate);
+
+            for (int i = 0; i < animFrameCount; i++)
+            {
+                currentImg = startImg.Clone();
+
+                animationPercentageState.Value = i / animFrameCount;
+
+                animationTransformationAction((MagickImage)currentImg);
+
+                WriteAndDispose(currentImg);
+            }
         }
     }
 }
