@@ -37,7 +37,6 @@ namespace MagickPhotoAnimationLib
         private const float OutputScreenRatio = 1.5f;
         private const int OutputFrameRate = 24;
 
-        private delegate void AnimationTransformationAction(MagickImage currentImg);
         private int _outputIndex;
         private GraphicsCache _graphicsCache = new GraphicsCache();
 
@@ -110,30 +109,61 @@ namespace MagickPhotoAnimationLib
 #if true
             const int widthOfCanvasForHuman = 2000;
 
-            var background = new MagickImage(MagickColor.FromRgb(200, 255, 255), widthOfCanvasForHuman, (int)(widthOfCanvasForHuman / OutputScreenRatio));
 
             const int legTopAngle = 70;
 
             const string human0Name = "ondra0";
             const string human0DirPath = @"C:\Users\ondrej\MagickPhotoAnimationLib\images\ondra0";
 
-            Human.StoreGraphicsToCache(_graphicsCache, human0Name, human0DirPath);
+            //Human.StoreGraphicsToCache(_graphicsCache, human0Name, human0DirPath);
 
-            var human = new Human(
+            for (int i = 0; i < 3; i ++)
+            {
+               var human = new Human(
+                   human0DirPath,
+                   human0Name,
+                   _graphicsCache,
+                   new Point(widthOfCanvasForHuman, widthOfCanvasForHuman / OutputScreenRatio),
+                   new Dictionary<HumanSkeletonPartName, double>
+                   {
+                        { HumanSkeletonPartName.Body, 50 },
+                        { HumanSkeletonPartName.Head, 0 },
+                        { HumanSkeletonPartName.LegLTop, legTopAngle },
+                        { HumanSkeletonPartName.LegLBottom, legTopAngle },
+                   }
+               );
+
+                var background = new MagickImage(MagickColor.FromRgb(200, 255, 255), widthOfCanvasForHuman, (int)(widthOfCanvasForHuman / OutputScreenRatio));
+                background.Composite(human.MagickImage, Gravity.Center, CompositeOperator.Over);
+            }
+            
+            /*
+            var animationPercentageState = new AnimationPercentageState();
+
+            var bodyAngleAnimParam = new AnimationParameter(0, 50, animationPercentageState);
+
+            Animate(0, 0.1, animationPercentageState, () =>
+            {
+                var human = new Human(
                 human0Name,
                 _graphicsCache,
                 new Point(widthOfCanvasForHuman, widthOfCanvasForHuman / OutputScreenRatio),
                 new Dictionary<HumanSkeletonPartName, double>
                 {
-                    { HumanSkeletonPartName.Body, 50 },
+                    { HumanSkeletonPartName.Body, bodyAngleAnimParam.CurrentValue },
                     { HumanSkeletonPartName.Head, 0 },
                     { HumanSkeletonPartName.LegLTop, legTopAngle },
                     { HumanSkeletonPartName.LegLBottom, legTopAngle },
                 }
                 );
+                var background = new MagickImage(MagickColor.FromRgb(200, 255, 255), widthOfCanvasForHuman, (int)(widthOfCanvasForHuman / OutputScreenRatio));
+                background.Composite(human.MagickImage, Gravity.Center, CompositeOperator.Over);
+                return background;
+            });
 
-            background.Composite(human.MagickImage, Gravity.Center, CompositeOperator.Over);
-            PreviewImgInWpf(background);
+
+            Application.Current.Shutdown();
+            */
 #endif
 #if false
             var startImg = new MagickImage(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
@@ -145,9 +175,11 @@ namespace MagickPhotoAnimationLib
             var cropWidthAnimParam = new AnimationParameter(startImg.Width, endCropWidth, animationPercentageState);
             var cropHeightAnimParam = new AnimationParameter(startImg.Height, endCropWidth / OutputScreenRatio, animationPercentageState);
 
-            Animate(10.3, 10.6, startImg, animationPercentageState, currentImg =>
+            Animate(10.3, 10.6, animationPercentageState, () =>
             {
-                currentImg.Crop((int)cropWidthAnimParam.CurrentValue, (int)cropHeightAnimParam.CurrentValue, Gravity.Center);
+                var newImage = startImg.Clone();
+                newImage.Crop((int)cropWidthAnimParam.CurrentValue, (int)cropHeightAnimParam.CurrentValue, Gravity.Center);
+                return newImage;
             });
 
             startImg.Dispose();
@@ -169,7 +201,7 @@ namespace MagickPhotoAnimationLib
         {
             img.Resize(OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
             img.Write($@"C:\Users\ondrej\MagickPhotoAnimationLib\out\sequence\{_outputIndex.ToString("00")}.jpg");
-            img.Dispose();
+            //img.Dispose();
             _outputIndex++;
         }
 
@@ -182,27 +214,21 @@ namespace MagickPhotoAnimationLib
             Height = previewImage.Height;
             Top = SystemParameters.PrimaryScreenHeight - previewImage.Height - 45;
             previewImage.Write($@"C:\Users\ondrej\MagickPhotoAnimationLib\out\preview_image.jpg");
-            previewImage.Dispose();
+            //previewImage.Dispose();
             Image1.Source = new BitmapImage(new Uri(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\preview_image.jpg"));
         }
 
 
-        private void Animate(double animStartTime, double animEndTime, MagickImage startImg, AnimationPercentageState animationPercentageState,
-            AnimationTransformationAction animationTransformationAction)
+        private void Animate(double animStartTime, double animEndTime, AnimationPercentageState animationPercentageState,
+            Func<IMagickImage> newImageCreator)
         {
-            IMagickImage currentImg;
-
             var animFrameCount = Math.Ceiling((animEndTime - animStartTime) * OutputFrameRate);
 
             for (int i = 0; i < animFrameCount; i++)
             {
-                currentImg = startImg.Clone();
-
                 animationPercentageState.Value = i / animFrameCount;
-
-                animationTransformationAction((MagickImage)currentImg);
-
-                WriteAndDispose(currentImg);
+                var newIMage = newImageCreator();
+                WriteAndDispose(newIMage);
             }
         }
     }
