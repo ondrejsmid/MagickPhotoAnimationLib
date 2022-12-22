@@ -30,10 +30,13 @@ namespace MagickPhotoAnimationLib
 {
     public partial class MainWindow : Window
     {
+        const int InputImagesPercentageSize = 25; /* supported values: 100, 50, 25 */
+        private static string _imagesSizeDirName = InputImagesPercentageSize == 100 ? "images" : $"images_size_{InputImagesPercentageSize}_percent";
+        private static string _imagesDirPath = $@"C:\Users\ondrej\MagickPhotoAnimationLib\{_imagesSizeDirName}";
+
         private static readonly float[] ObfuscationMinimizations = { 1, 0.8f };
         private static readonly float ObfuscationMinimization = ObfuscationMinimizations[1];
-
-        private const int OutputScreenWidth = 1000;
+        private const int OutputScreenWidth = (int)(1000 * ((float)InputImagesPercentageSize / 100));
         private const float OutputScreenRatio = 1.5f;
         private const int OutputFrameRate = 24;
 
@@ -48,7 +51,7 @@ namespace MagickPhotoAnimationLib
             {
                 outFile.Delete();
             }
-
+            File.WriteAllText(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\log.txt", string.Empty);
 #if false
             var head = new MagickImageAndVector(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\ondra0\head.png");
 
@@ -107,44 +110,52 @@ namespace MagickPhotoAnimationLib
             PreviewImgInWpf(compositeImage);
 #endif
 #if true
-            const int widthOfCanvasForHuman = 2000;
-
+            const int widthOfCanvasForHuman = (int)(2000 * ((float)InputImagesPercentageSize / 100));
 
             const int legTopAngle = 70;
 
             const string human0Name = "ondra0";
-            const string human0DirPath = @"C:\Users\ondrej\MagickPhotoAnimationLib\images\ondra0";
+
+            var human0DirPath = Path.Combine(_imagesDirPath, human0Name);
            
             var animationPercentageState = new AnimationPercentageState();
 
             var bodyAngleAnimParam = new AnimationParameter(0, 50, animationPercentageState);
 
-            Animate(0, 2, animationPercentageState, () =>
-            {
-                var human = new Human(
-                    human0DirPath,
-                    human0Name,
-                    _graphicsCache,
-                    new Point(widthOfCanvasForHuman, widthOfCanvasForHuman / OutputScreenRatio),
-                    new Dictionary<HumanSkeletonPartName, double>
+            MeasureTime(() =>
+                Animate(0, 0.3, animationPercentageState, () =>
+                {
+                    MagickImage oneCycleRetVal = default;
+                    MeasureTime(() =>
                     {
-                        { HumanSkeletonPartName.Body, bodyAngleAnimParam.CurrentValue },
-                        { HumanSkeletonPartName.Head, 0 },
-                        { HumanSkeletonPartName.LegLTop, legTopAngle },
-                        { HumanSkeletonPartName.LegLBottom, legTopAngle },
-                    }
-                );
-                var background = new MagickImage(MagickColor.FromRgb(200, 255, 255), widthOfCanvasForHuman, (int)(widthOfCanvasForHuman / OutputScreenRatio));
-                background.Composite(human.MagickImage, Gravity.Center, CompositeOperator.Over);
-                return background;
-            });
+                        var human = new Human(
+                            human0DirPath,
+                            human0Name,
+                            _graphicsCache,
+                            new Point(widthOfCanvasForHuman, widthOfCanvasForHuman / OutputScreenRatio),
+                            new Dictionary<HumanSkeletonPartName, double>
+                            {
+                            { HumanSkeletonPartName.Body, bodyAngleAnimParam.CurrentValue },
+                            { HumanSkeletonPartName.Head, 0 },
+                            { HumanSkeletonPartName.LegLTop, legTopAngle },
+                            { HumanSkeletonPartName.LegLBottom, legTopAngle },
+                            }
+                        );
+                        var background = new MagickImage(MagickColor.FromRgb(200, 255, 255), widthOfCanvasForHuman, (int)(widthOfCanvasForHuman / OutputScreenRatio));
+                        background.Composite(human.MagickImage, Gravity.Center, CompositeOperator.Over);
+                        oneCycleRetVal = background;
+                    },
+                    "one cycle");
+                    return oneCycleRetVal;
+                }),
+                "whole animation");
 
             Application.Current.Shutdown();
 #endif
 #if false
-            var startImg = new MagickImage(@"C:\Users\ondrej\MagickPhotoAnimationLib\images\1.jpg");
+            var startImg = new MagickImage(Path.Combine(_imagesDirPath, "1.jpg"));
             
-            const int endCropWidth = 3000;
+            var endCropWidth = (int)(startImg.Width * 0.7);
 
             var animationPercentageState = new AnimationPercentageState();
 
@@ -170,7 +181,7 @@ namespace MagickPhotoAnimationLib
             stopwatch.Start();
             action();
             stopwatch.Stop();
-            Debug.WriteLine($"Elapsed Time of {nameOfMeasurement}: {(float)stopwatch.ElapsedMilliseconds / 1000} s");
+            File.AppendAllText(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\log.txt", $"Elapsed Time of {nameOfMeasurement}: {(float)stopwatch.ElapsedMilliseconds / 1000} s{Environment.NewLine}");
         }
 
         private void WriteAndDispose(IMagickImage img)
