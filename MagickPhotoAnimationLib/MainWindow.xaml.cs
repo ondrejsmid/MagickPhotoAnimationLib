@@ -34,7 +34,7 @@ namespace MagickPhotoAnimationLib
         private static string _imagesSizeDirName = InputImagesPercentageSize == 100 ? "images" : $"images_size_{InputImagesPercentageSize}_percent";
         private static string _imagesDirPath = $@"C:\Users\ondrej\MagickPhotoAnimationLib\{_imagesSizeDirName}";
 
-        private static readonly float[] ObfuscationMinimizations = { 1, 0.8f };
+        private static readonly float[] ObfuscationMinimizations = { 1, 0.5f };
         private static readonly float ObfuscationMinimization = ObfuscationMinimizations[1];
         private const int OutputScreenWidth = (int)(1000 * ((float)InputImagesPercentageSize / 100));
         private const float OutputScreenRatio = 1.5f;
@@ -110,7 +110,7 @@ namespace MagickPhotoAnimationLib
             PreviewImgInWpf(compositeImage);
 #endif
 #if true
-            const int widthOfCanvasForHuman = (int)(2000 * ((float)InputImagesPercentageSize / 100));
+            const int widthOfCanvasForHuman = 2 * OutputScreenWidth;
 
             const int legTopAngle = 70;
 
@@ -123,7 +123,7 @@ namespace MagickPhotoAnimationLib
             var bodyAngleAnimParam = new AnimationParameter(0, 50, animationPercentageState);
 
             MeasureTime(() =>
-                Animate(0, 0.3, animationPercentageState, () =>
+                Animate(0, 0.2, animationPercentageState, () =>
                 {
                     MagickImage oneCycleRetVal = default;
                     MeasureTime(() =>
@@ -150,7 +150,8 @@ namespace MagickPhotoAnimationLib
                 }),
                 "whole animation");
 
-            Application.Current.Shutdown();
+            PreviewImgInWpf($@"C:\Users\ondrej\MagickPhotoAnimationLib\out\sequence\{(_outputIndex - 1).ToString("00")}.jpg");
+            //Application.Current.Shutdown();
 #endif
 #if false
             var startImg = new MagickImage(Path.Combine(_imagesDirPath, "1.jpg"));
@@ -188,7 +189,7 @@ namespace MagickPhotoAnimationLib
         {
             img.Resize(OutputScreenWidth, (int)(OutputScreenWidth / OutputScreenRatio));
             img.Write($@"C:\Users\ondrej\MagickPhotoAnimationLib\out\sequence\{_outputIndex.ToString("00")}.jpg");
-            //img.Dispose();
+            img.Dispose();
             _outputIndex++;
         }
 
@@ -201,10 +202,20 @@ namespace MagickPhotoAnimationLib
             Height = previewImage.Height;
             Top = SystemParameters.PrimaryScreenHeight - previewImage.Height - 45;
             previewImage.Write($@"C:\Users\ondrej\MagickPhotoAnimationLib\out\preview_image.jpg");
-            //previewImage.Dispose();
+            previewImage.Dispose();
             Image1.Source = new BitmapImage(new Uri(@"C:\Users\ondrej\MagickPhotoAnimationLib\out\preview_image.jpg"));
         }
 
+        private void PreviewImgInWpf(string imgPath)
+        {
+            var imgOnDisk = new MagickImage(imgPath);
+            var previewImgWidth = imgOnDisk.Width * ObfuscationMinimization;
+            var previewImgHeight = imgOnDisk.Height * ObfuscationMinimization;
+            Width = previewImgWidth;
+            Height = previewImgHeight;
+            Top = SystemParameters.PrimaryScreenHeight - previewImgHeight - 45;
+            Image1.Source = new BitmapImage(new Uri(imgPath));
+        }
 
         private void Animate(double animStartTime, double animEndTime, AnimationPercentageState animationPercentageState,
             Func<IMagickImage> newImageCreator)
