@@ -17,6 +17,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using ImageMagick;
 using MagickPhotoAnimationLib.Animation;
 using MagickPhotoAnimationLib.Extensions;
@@ -35,13 +36,15 @@ namespace MagickPhotoAnimationLib
         private static string _imagesDirPath = $@"C:\Users\ondrej\MagickPhotoAnimationLib\{_imagesSizeDirName}";
 
         private static readonly float[] ObfuscationMinimizations = { 1, 0.5f };
-        private static readonly float ObfuscationMinimization = ObfuscationMinimizations[1];
+        private static readonly float ObfuscationMinimization = ObfuscationMinimizations[0];
         private const int OutputScreenWidth = (int)(1000 * ((float)InputImagesPercentageSize / 100));
         private const float OutputScreenRatio = 1.5f;
-        private const int OutputFrameRate = 24;
+        private const int OutputFrameRate = 5; /* standard is 24 */
 
         private int _outputIndex;
         private GraphicsCache _graphicsCache = new GraphicsCache();
+        private DispatcherTimer _dispatcherTimer;
+        private int _previewAnimationIndex;
 
         public MainWindow()
         {
@@ -123,7 +126,7 @@ namespace MagickPhotoAnimationLib
             var bodyAngleAnimParam = new AnimationParameter(0, 50, animationPercentageState);
 
             MeasureTime(() =>
-                Animate(0, 0.2, animationPercentageState, () =>
+                Animate(0, 2, animationPercentageState, () =>
                 {
                     MagickImage oneCycleRetVal = default;
                     MeasureTime(() =>
@@ -150,8 +153,7 @@ namespace MagickPhotoAnimationLib
                 }),
                 "whole animation");
 
-            PreviewImgInWpf($@"C:\Users\ondrej\MagickPhotoAnimationLib\out\sequence\{(_outputIndex - 1).ToString("00")}.jpg");
-            //Application.Current.Shutdown();
+            AnimatedPreview();
 #endif
 #if false
             var startImg = new MagickImage(Path.Combine(_imagesDirPath, "1.jpg"));
@@ -174,6 +176,26 @@ namespace MagickPhotoAnimationLib
             
             Application.Current.Shutdown();
 #endif
+        }
+
+        private void AnimatedPreview()
+        {
+            _dispatcherTimer = new DispatcherTimer();
+            _dispatcherTimer.Tick += new EventHandler(AnimatedPreviewTick);
+            _dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 1000 / OutputFrameRate);
+            _dispatcherTimer.Start();
+        }
+
+        private void AnimatedPreviewTick(object sender, EventArgs e)
+        {
+            if (_previewAnimationIndex == _outputIndex)
+            {
+                _dispatcherTimer.Stop();
+                _previewAnimationIndex = 0;
+                return;
+            }
+            PreviewImgInWpf($@"C:\Users\ondrej\MagickPhotoAnimationLib\out\sequence\{_previewAnimationIndex.ToString("00")}.jpg");
+            _previewAnimationIndex++;
         }
 
         private static void MeasureTime(Action action, string nameOfMeasurement)
@@ -208,11 +230,10 @@ namespace MagickPhotoAnimationLib
 
         private void PreviewImgInWpf(string imgPath)
         {
-            var imgOnDisk = new MagickImage(imgPath);
-            var previewImgWidth = imgOnDisk.Width * ObfuscationMinimization;
-            var previewImgHeight = imgOnDisk.Height * ObfuscationMinimization;
+            var previewImgWidth = OutputScreenWidth * ObfuscationMinimization;
+            var previewImgHeight = (int)(OutputScreenWidth / OutputScreenRatio) * ObfuscationMinimization;
             Width = previewImgWidth;
-            Height = previewImgHeight;
+            Height = (int)(OutputScreenWidth / OutputScreenRatio) * ObfuscationMinimization;
             Top = SystemParameters.PrimaryScreenHeight - previewImgHeight - 45;
             Image1.Source = new BitmapImage(new Uri(imgPath));
         }
