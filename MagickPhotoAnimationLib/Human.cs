@@ -11,9 +11,6 @@ namespace MagickPhotoAnimationLib
 {
     internal class Human
     {
-        private string _name;
-        private GraphicsCache _graphicsCache = new GraphicsCache();
-
         private readonly Point _canvasSize;
 
         private readonly MagickImageAndVector _head;
@@ -27,15 +24,17 @@ namespace MagickPhotoAnimationLib
         private readonly MagickImageAndVector _legRBottom;
         private readonly MagickImageAndVector _legLBottom;
 
+        private readonly Dictionary<HumanSkeletonPartName, MagickImageAndVector> PartNameToMagickImageAndVector;
+
         private readonly SkeletonPart _skeleton;
         private readonly Dictionary<HumanSkeletonPartName, double> _skeletonRotations = new Dictionary<HumanSkeletonPartName, double>();
         private readonly Dictionary<HumanSkeletonPartName, Point> _skeletonRotationShifts = new Dictionary<HumanSkeletonPartName, Point>();
+        private Dictionary<HumanSkeletonPartName, Point> _shiftsForComposition = new Dictionary<HumanSkeletonPartName, Point>();
 
-        public Human(string imgDirPath, string name, GraphicsCache graphicsCache, Point canvasSize)
+        public Human(string imgDirPath, Point canvasSize)
         {
-            _name = name;
-            _graphicsCache = graphicsCache;
             _canvasSize = canvasSize;
+
             _body = new MagickImageAndVector(Path.Combine(imgDirPath, "body.png"));
             _head = new MagickImageAndVector(Path.Combine(imgDirPath, "head.png"));
             _armRTop = new MagickImageAndVector(Path.Combine(imgDirPath, "arm-R-top.png"));
@@ -46,6 +45,20 @@ namespace MagickPhotoAnimationLib
             _legRBottom = new MagickImageAndVector(Path.Combine(imgDirPath, "leg-R-bottom.png"));
             _legLTop = new MagickImageAndVector(Path.Combine(imgDirPath, "leg-L-top.png"));
             _legLBottom = new MagickImageAndVector(Path.Combine(imgDirPath, "leg-L-bottom.png"));
+
+            PartNameToMagickImageAndVector = new Dictionary<HumanSkeletonPartName, MagickImageAndVector>
+            {
+                { HumanSkeletonPartName.Body, _body },
+                { HumanSkeletonPartName.Head, _head },
+                { HumanSkeletonPartName.ArmRTop, _armRTop },
+                { HumanSkeletonPartName.ArmRBottom, _armRBottom },
+                { HumanSkeletonPartName.ArmLTop, _armLTop },
+                { HumanSkeletonPartName.ArmLBottom, _armLBottom },
+                { HumanSkeletonPartName.LegRTop, _legRTop },
+                { HumanSkeletonPartName.LegRBottom, _legRBottom },
+                { HumanSkeletonPartName.LegLTop, _legLTop },
+                { HumanSkeletonPartName.LegLBottom, _legLBottom }
+            };
 
             _skeleton = new SkeletonPart
             {
@@ -123,9 +136,9 @@ namespace MagickPhotoAnimationLib
             };
         }
 
-        public Human(string imgDirPath, string name, GraphicsCache graphicsCache, Point canvasSize, Dictionary<HumanSkeletonPartName, double> skeletonRotations)
+        public Human(string imgDirPath, Point canvasSize, Dictionary<HumanSkeletonPartName, double> skeletonRotations)
             :
-            this(imgDirPath, name, graphicsCache, canvasSize)
+            this(imgDirPath, canvasSize)
         {
             _skeletonRotations = skeletonRotations;
         }
@@ -144,24 +157,24 @@ namespace MagickPhotoAnimationLib
                 ComputeRotationShift(HumanSkeletonPartName.LegLTop, _legLTop);
                 ComputeRotationShift(HumanSkeletonPartName.LegLBottom, _legLBottom);
 
+                ComputeShiftsForComposition();
+
                 var canvasImage = new MagickImage(MagickColor.FromRgba(0, 0, 0, 0), (int)_canvasSize.X, (int)_canvasSize.Y);
 
-                var shiftsForComposition = GetShiftsForComposition();
-
-                foreach (var child in new[] {
-                    _head,
-                    _armRTop,
-                    _armRBottom,
-                    _armLTop,
-                    _armLBottom,
-                    _legRTop,
-                    _legRBottom,
-                    _legLTop,
-                    _legLBottom,
-                    _body
+                foreach (var partName in new[] {
+                    HumanSkeletonPartName.Head,
+                    HumanSkeletonPartName.ArmRTop,
+                    HumanSkeletonPartName.ArmRBottom,
+                    HumanSkeletonPartName.ArmLTop,
+                    HumanSkeletonPartName.ArmLBottom,
+                    HumanSkeletonPartName.LegRTop,
+                    HumanSkeletonPartName.LegRBottom,
+                    HumanSkeletonPartName.LegLTop,
+                    HumanSkeletonPartName.LegLBottom,
+                    HumanSkeletonPartName.Body
                 }.Reverse())
                 {
-                    canvasImage.Composite(child.MagickImage, Gravity.Center, shiftsForComposition[child], CompositeOperator.Over);
+                    canvasImage.Composite(PartNameToMagickImageAndVector[partName].MagickImage, Gravity.Center, _shiftsForComposition[partName], CompositeOperator.Over);
                 }
 
                 return canvasImage;
@@ -187,34 +200,28 @@ namespace MagickPhotoAnimationLib
             graphicsCache.Set($"{humanName}-leg-L-bottom", new MagickImageAndVector(Path.Combine(humanDirPath, "leg-L-bottom.png")));
         }
 
-        private Dictionary<MagickImageAndVector, Point> GetShiftsForComposition()
+        private void ComputeShiftsForComposition()
         {
-            var shiftsForComposition = new Dictionary<MagickImageAndVector, Point>();
-            GetShiftsForComposition(_skeleton, ref shiftsForComposition, Pivot.Negate());
-            return shiftsForComposition;
+            ComputeShiftsForComposition(_skeleton, Pivot.Negate());
         }
 
-        private void GetShiftsForComposition(SkeletonPart skeletonPart, ref Dictionary<MagickImageAndVector, Point> shiftsForComposition, Point accumulatedShift)
+        private void ComputeShiftsForComposition(SkeletonPart skeletonPart, Point accumulatedShift)
         {
             var rotatedShift =
                 _skeletonRotationShifts.ContainsKey(skeletonPart.HumanSkeletonPartName)
                 ? _skeletonRotationShifts[skeletonPart.HumanSkeletonPartName]
                 : new Point(0, 0);
 
-            shiftsForComposition[skeletonPart.MagickImageAndVector] = accumulatedShift.Add(rotatedShift);
+            _shiftsForComposition[skeletonPart.HumanSkeletonPartName] = accumulatedShift.Add(rotatedShift);
 
             if (skeletonPart.Children != null)
             {
                 foreach (var child in skeletonPart.Children)
                 {
-                    if (child.HumanSkeletonPartName == HumanSkeletonPartName.ArmLTop)
-                    {
-
-                    }
-
-                    var parentTailPointName = child.ParentTailPointName == null ? new Point(0, 0) : skeletonPart.MagickImageAndVector.GetPoint(child.ParentTailPointName);
-                    GetShiftsForComposition(child, ref shiftsForComposition,
-                        accumulatedShift.Add(parentTailPointName).Subtract(child.MagickImageAndVector.GetPoint("Pivot")));
+                    var parentTailPoint = skeletonPart.MagickImageAndVector.GetPoint(child.ParentTailPointName);
+                    ComputeShiftsForComposition(
+                        child,
+                        accumulatedShift.Add(parentTailPoint).Subtract(child.MagickImageAndVector.Pivot));
                 }
             }
         }
