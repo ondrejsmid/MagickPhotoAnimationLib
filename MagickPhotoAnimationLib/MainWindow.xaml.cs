@@ -114,21 +114,20 @@ namespace MagickPhotoAnimationLib
 #if true
             const int widthOfCanvasForHuman = 2 * OutputScreenWidth;
 
-            const int legLTopAngle = 70;
-
             const string human0Name = "ondra0";
 
             var human0DirPath = Path.Combine(_imagesDirPath, human0Name);
            
             var animationPercentageState = new AnimationPercentageState();
 
-            var bodyAngleAnimParam = new AnimationParameter(0, 50, animationPercentageState);
-            //var cropWidthAnimParam = new AnimationParameter(widthOfCanvasForHuman, 1.5 * OutputScreenWidth, animationPercentageState);
+            var bodyAngleAnimParam = new AnimationParameter(50, -120, animationPercentageState);
+            var armRAngleAnimParam = new AnimationParameter(0, -90, animationPercentageState);
+            var legLBottomAngleAnimParam = new AnimationParameter(0, 80, animationPercentageState);
 
             var camel = new MagickImageAndVector(Path.Combine(_imagesDirPath, "camel.png"));
 
             MeasureTime(() =>
-                Animate(0, 3, animationPercentageState, () =>
+                Animate(0, 4, animationPercentageState, () =>
                 {
                     MagickImage oneCycleRetVal = default;
                     MeasureTime(() =>
@@ -140,16 +139,19 @@ namespace MagickPhotoAnimationLib
                             {
                             { HumanSkeletonPartName.Body, bodyAngleAnimParam.CurrentValue },
                             { HumanSkeletonPartName.Head, 0 },
-                            { HumanSkeletonPartName.LegLTop, legLTopAngle },
-                            { HumanSkeletonPartName.LegLBottom, legLTopAngle },
-                            { HumanSkeletonPartName.ArmRTop, -60 },
-                            { HumanSkeletonPartName.ArmRBottom, -40 },
+                            { HumanSkeletonPartName.LegLTop, legLBottomAngleAnimParam.CurrentValue },
+                            { HumanSkeletonPartName.LegLBottom, legLBottomAngleAnimParam.CurrentValue },
+                            { HumanSkeletonPartName.ArmRTop, armRAngleAnimParam.CurrentValue },
+                            { HumanSkeletonPartName.ArmRBottom, - armRAngleAnimParam.CurrentValue / 2 },
                             }
                         );
+
                         var background = new MagickImage(MagickColor.FromRgb(200, 255, 255), widthOfCanvasForHuman, (int)(widthOfCanvasForHuman / OutputScreenRatio));
                         background.Composite(human.MagickImage, Gravity.Center, CompositeOperator.Over);
-                        background.Composite(camel.MagickImage, Gravity.Center, CompositeOperator.Over);
-                        //background.Crop((int)cropWidthAnimParam.CurrentValue, (int)(cropWidthAnimParam.CurrentValue / OutputScreenRatio), Gravity.Center);
+
+                        background.Composite(camel.MagickImage, Gravity.Center, human.GetShiftForCompositionWithExternalImage(HumanSkeletonPartName.ArmRBottom, camel.Pivot), CompositeOperator.Over);
+                        background.Composite(camel.MagickImage, Gravity.Center, human.GetShiftForCompositionWithExternalImage(HumanSkeletonPartName.LegLBottom, camel.Pivot), CompositeOperator.Over);
+
                         oneCycleRetVal = background;
                     },
                     "one cycle");

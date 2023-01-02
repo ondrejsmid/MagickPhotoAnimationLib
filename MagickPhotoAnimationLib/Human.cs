@@ -11,6 +11,7 @@ namespace MagickPhotoAnimationLib
 {
     internal class Human
     {
+        private MagickImage _finalMagickImage;
         private readonly Point _canvasSize;
 
         private readonly MagickImageAndVector _head;
@@ -24,15 +25,18 @@ namespace MagickPhotoAnimationLib
         private readonly MagickImageAndVector _legRBottom;
         private readonly MagickImageAndVector _legLBottom;
 
-        private readonly Dictionary<HumanSkeletonPartName, MagickImageAndVector> PartNameToMagickImageAndVector;
+        private readonly Dictionary<HumanSkeletonPartName, MagickImageAndVector> _partNameToMagickImageAndVector;
+        private readonly Dictionary<HumanSkeletonPartName, SkeletonPart> _partNameToSkeletonPart = new Dictionary<HumanSkeletonPartName, SkeletonPart>();
 
         private readonly SkeletonPart _skeleton;
         private readonly Dictionary<HumanSkeletonPartName, double> _skeletonRotations = new Dictionary<HumanSkeletonPartName, double>();
         private readonly Dictionary<HumanSkeletonPartName, Point> _skeletonRotationShifts = new Dictionary<HumanSkeletonPartName, Point>();
         private Dictionary<HumanSkeletonPartName, Point> _shiftsForComposition = new Dictionary<HumanSkeletonPartName, Point>();
-
-        public Human(string imgDirPath, Point canvasSize)
+       
+        public Human(string imgDirPath, Point canvasSize, Dictionary<HumanSkeletonPartName, double> skeletonRotations)
         {
+            _skeletonRotations = skeletonRotations;
+
             _canvasSize = canvasSize;
 
             _body = new MagickImageAndVector(Path.Combine(imgDirPath, "body.png"));
@@ -46,7 +50,7 @@ namespace MagickPhotoAnimationLib
             _legLTop = new MagickImageAndVector(Path.Combine(imgDirPath, "leg-L-top.png"));
             _legLBottom = new MagickImageAndVector(Path.Combine(imgDirPath, "leg-L-bottom.png"));
 
-            PartNameToMagickImageAndVector = new Dictionary<HumanSkeletonPartName, MagickImageAndVector>
+            _partNameToMagickImageAndVector = new Dictionary<HumanSkeletonPartName, MagickImageAndVector>
             {
                 { HumanSkeletonPartName.Body, _body },
                 { HumanSkeletonPartName.Head, _head },
@@ -83,8 +87,8 @@ namespace MagickPhotoAnimationLib
                            {
                                HumanSkeletonPartName = HumanSkeletonPartName.ArmRBottom,
                                ParentTailPointName = "Tail",
-                               MagickImageAndVector = _armRBottom,
-                           }
+                               MagickImageAndVector = _armRBottom
+                            }
                        }
                     },
                     new SkeletonPart
@@ -134,18 +138,49 @@ namespace MagickPhotoAnimationLib
                     },
                 }
             };
+
+            ComputeMagickImage();
         }
 
-        public Human(string imgDirPath, Point canvasSize, Dictionary<HumanSkeletonPartName, double> skeletonRotations)
-            :
-            this(imgDirPath, canvasSize)
+        public MagickImage MagickImage => _finalMagickImage;
+
+        public Point Pivot
         {
-            _skeletonRotations = skeletonRotations;
+            get => _body.GetPoint("Pivot");
         }
-        public MagickImage MagickImage
+
+        /*
+        public static void StoreGraphicsToCache(GraphicsCache graphicsCache, string humanName, string humanDirPath)
         {
-            get
-            {
+            graphicsCache.Set($"{humanName}-body", new MagickImageAndVector(Path.Combine(humanDirPath, "body.png")));
+            graphicsCache.Set($"{humanName}-head", new MagickImageAndVector(Path.Combine(humanDirPath, "head.png")));
+            graphicsCache.Set($"{humanName}-arm-R-top", new MagickImageAndVector(Path.Combine(humanDirPath, "arm-R-top.png")));
+            graphicsCache.Set($"{humanName}-arm-R-bottom", new MagickImageAndVector(Path.Combine(humanDirPath, "arm-R-bottom.png")));
+            graphicsCache.Set($"{humanName}-arm-L-top", new MagickImageAndVector(Path.Combine(humanDirPath, "arm-L-top.png")));
+            graphicsCache.Set($"{humanName}-arm-L-bottom", new MagickImageAndVector(Path.Combine(humanDirPath, "arm-L-bottom.png")));
+            graphicsCache.Set($"{humanName}-leg-R-top", new MagickImageAndVector(Path.Combine(humanDirPath, "leg-R-top.png")));
+            graphicsCache.Set($"{humanName}-leg-R-bottom", new MagickImageAndVector(Path.Combine(humanDirPath, "leg-R-bottom.png")));
+            graphicsCache.Set($"{humanName}-leg-L-top", new MagickImageAndVector(Path.Combine(humanDirPath, "leg-L-top.png")));
+            graphicsCache.Set($"{humanName}-leg-L-bottom", new MagickImageAndVector(Path.Combine(humanDirPath, "leg-L-bottom.png")));
+        }
+        */
+
+        public Point GetShiftForCompositionWithExternalImage(HumanSkeletonPartName humanPartNameToJoinWith, Point externalImagePivot)
+        {
+            var accumulatedShift = _shiftsForComposition[humanPartNameToJoinWith];
+            var humanPartToJoinWithRotatedShift =
+                _skeletonRotationShifts.ContainsKey(humanPartNameToJoinWith)
+                ? _skeletonRotationShifts[humanPartNameToJoinWith]
+                : new Point(0, 0);
+
+            var humanPartToJoinWith = _partNameToSkeletonPart[humanPartNameToJoinWith];
+            var parentTailPoint = humanPartToJoinWith.MagickImageAndVector.GetPoint("Tail");
+
+            return accumulatedShift.Subtract(humanPartToJoinWithRotatedShift).Add(parentTailPoint).Subtract(externalImagePivot);
+        }
+
+        private void ComputeMagickImage()
+        {
                 ComputeRotationShift(HumanSkeletonPartName.Body, _body);
                 ComputeRotationShift(HumanSkeletonPartName.Head, _head);
                 ComputeRotationShift(HumanSkeletonPartName.ArmRTop, _armRTop);
@@ -174,30 +209,10 @@ namespace MagickPhotoAnimationLib
                     HumanSkeletonPartName.Body
                 }.Reverse())
                 {
-                    canvasImage.Composite(PartNameToMagickImageAndVector[partName].MagickImage, Gravity.Center, _shiftsForComposition[partName], CompositeOperator.Over);
+                    canvasImage.Composite(_partNameToMagickImageAndVector[partName].MagickImage, Gravity.Center, _shiftsForComposition[partName], CompositeOperator.Over);
                 }
 
-                return canvasImage;
-            }
-        }
-
-        public Point Pivot
-        {
-            get => _body.GetPoint("Pivot");
-        }
-
-        public static void StoreGraphicsToCache(GraphicsCache graphicsCache, string humanName, string humanDirPath)
-        {
-            graphicsCache.Set($"{humanName}-body", new MagickImageAndVector(Path.Combine(humanDirPath, "body.png")));
-            graphicsCache.Set($"{humanName}-head", new MagickImageAndVector(Path.Combine(humanDirPath, "head.png")));
-            graphicsCache.Set($"{humanName}-arm-R-top", new MagickImageAndVector(Path.Combine(humanDirPath, "arm-R-top.png")));
-            graphicsCache.Set($"{humanName}-arm-R-bottom", new MagickImageAndVector(Path.Combine(humanDirPath, "arm-R-bottom.png")));
-            graphicsCache.Set($"{humanName}-arm-L-top", new MagickImageAndVector(Path.Combine(humanDirPath, "arm-L-top.png")));
-            graphicsCache.Set($"{humanName}-arm-L-bottom", new MagickImageAndVector(Path.Combine(humanDirPath, "arm-L-bottom.png")));
-            graphicsCache.Set($"{humanName}-leg-R-top", new MagickImageAndVector(Path.Combine(humanDirPath, "leg-R-top.png")));
-            graphicsCache.Set($"{humanName}-leg-R-bottom", new MagickImageAndVector(Path.Combine(humanDirPath, "leg-R-bottom.png")));
-            graphicsCache.Set($"{humanName}-leg-L-top", new MagickImageAndVector(Path.Combine(humanDirPath, "leg-L-top.png")));
-            graphicsCache.Set($"{humanName}-leg-L-bottom", new MagickImageAndVector(Path.Combine(humanDirPath, "leg-L-bottom.png")));
+                _finalMagickImage = canvasImage;
         }
 
         private void ComputeShiftsForComposition()
@@ -224,6 +239,8 @@ namespace MagickPhotoAnimationLib
                         accumulatedShift.Add(parentTailPoint).Subtract(child.MagickImageAndVector.Pivot));
                 }
             }
+
+            _partNameToSkeletonPart[skeletonPart.HumanSkeletonPartName] = skeletonPart;
         }
 
         private void ComputeRotationShift(HumanSkeletonPartName humanSkeletonPartName, MagickImageAndVector skeletonPartMagickImageAndVector)
